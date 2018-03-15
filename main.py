@@ -50,6 +50,11 @@ def main():
 
     log_in_to_google(driver)
     scroll_n_times(driver, NUM_PAGES)
+
+    a_tags = driver.find_elements_by_tag_name('a')
+    post_urls = set([a.get_property('href')
+                     for a in a_tags if '?source=topic_page' in a.get_property('href')])
+
     driver.close()
 
 
