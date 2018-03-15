@@ -1,7 +1,12 @@
 from selenium import webdriver
 from time import sleep
 
+import medium
 import os
+
+
+def short_nap():
+    sleep(1)
 
 
 def nap():
@@ -42,7 +47,8 @@ def scroll_n_times(driver, n):
 
 
 def main():
-    NUM_PAGES = 10
+    MAX_POSTS = 25
+    NUM_PAGES = 3
 
     driver = webdriver.Chrome()
     driver.get('https://medium.com/topic/software-engineering')
@@ -54,9 +60,10 @@ def main():
 
     scroll_n_times(driver, NUM_PAGES)
 
-    a_tags = driver.find_elements_by_tag_name('a')
-    post_urls = set([a.get_property('href')
-                     for a in a_tags if '?source=topic_page' in a.get_property('href')])
+    post_urls = medium.extract_post_urls(driver)
+    posts = medium.fetch_posts(post_urls, short_nap)
+    top_posts = sorted(
+        posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
 
     driver.close()
 

@@ -8,6 +8,8 @@ name = "pypi"
 [packages]
 
 selenium = "*"
+requests = "*"
+"beautifulsoup4" = "*"
 
 
 [dev-packages]
