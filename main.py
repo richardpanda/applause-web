@@ -8,7 +8,7 @@ def nap():
     sleep(3)
 
 
-def log_in_to_google(driver):
+def log_in_to_google(driver, username, password):
     signin_button = driver.find_element_by_xpath(
         '//a[@data-action="sign-in-prompt"]')
     signin_button.click()
@@ -20,14 +20,14 @@ def log_in_to_google(driver):
     nap()
 
     email_input = driver.find_element_by_name('identifier')
-    email_input.send_keys(os.environ['APPLAUSE_WEB__GOOGLE_USERNAME'])
+    email_input.send_keys(username)
 
     next_button = driver.find_element_by_id('identifierNext')
     next_button.click()
     nap()
 
     password_input = driver.find_element_by_name('password')
-    password_input.send_keys(os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD'])
+    password_input.send_keys(password)
 
     next_button = driver.find_element_by_id('passwordNext')
     next_button.click()
@@ -48,7 +48,10 @@ def main():
     driver.get('https://medium.com/topic/software-engineering')
     nap()
 
-    log_in_to_google(driver)
+    username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
+    password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
+    log_in_to_google(driver, username, password)
+
     scroll_n_times(driver, NUM_PAGES)
 
     a_tags = driver.find_elements_by_tag_name('a')
