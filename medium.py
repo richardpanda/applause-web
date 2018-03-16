@@ -1,9 +1,16 @@
 from bs4 import BeautifulSoup
 from collections import namedtuple
+from time import sleep
 
 import json
 import re
 import requests
+
+BASE_URL = 'https://medium.com'
+TOPICS = [
+    'programming',
+    'software-engineering'
+]
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
 
@@ -43,11 +50,15 @@ def extract_post_urls(driver):
     return set([a.get_property('href') for a in a_tags if '?source=topic_page' in a.get_property('href')])
 
 
-def fetch_posts(urls, sleep=None):
+def fetch_posts(urls, sleep_time_in_s=0):
     posts = []
     for url in urls:
+        print(url)
         r = requests.get(url)
         posts.append(extract_post(r.text))
-        if sleep:
-            sleep()
+        sleep(sleep_time_in_s)
     return posts
+
+
+def topic_url(topic):
+    return '{}/topic/{}'.format(BASE_URL, topic)
