@@ -6,7 +6,8 @@ import json
 import re
 import requests
 
-BASE_URL = 'https://medium.com'
+BASE_URL = 'https://medium.com/'
+SIGN_IN_URL = '{}m/signin'.format(BASE_URL)
 TOPICS = [
     'programming',
     'software-engineering'
@@ -61,4 +62,4 @@ def fetch_posts(urls, sleep_time_in_s=0):
 
 
 def topic_url(topic):
-    return '{}/topic/{}'.format(BASE_URL, topic)
+    return '{}topic/{}'.format(BASE_URL, topic)
