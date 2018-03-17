@@ -1,0 +1,20 @@
+* {
+  font-size: 16px;
+}
+
+.hero__container {
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  height: 10rem;
+  justify-content: center;
+}
+
+.hero__title {
+  font-size: 1.75rem;
+  font-weight: 550;
+}
+
+.hero__subtitle {
+  font-size: 1.25rem;
+}

@@ -1,0 +1,40 @@
+{% extends 'layout.html' %}
+{% block title %}Applause{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+        .topics__container {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .topics__title {
+            font-size: 1.5rem;
+            font-weight: 550;
+            margin: 10px;
+        }
+
+        .topics__list {
+            margin: 0;
+        }
+
+        .topics__item {
+            margin: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="topics__container">
+        <div class="topics__title">Topics</div>
+        <ol class="topics__list">
+            {% for topic in topics %}
+                <li class="topics__item">
+                    <a href="topic/{{ topic }}">
+                        {{ topic.title().replace('-', ' ') }}
+                    </a>
+                </li>
+            {% endfor %}
+        </ol>
+    </div>
+{% endblock %}

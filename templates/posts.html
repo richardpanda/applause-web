@@ -1,0 +1,38 @@
+{% extends 'layout.html' %}
+{% block title %}Applause - {{ topic.title().replace('-', ' ') }}{% endblock %}
+{% block head %}
+    {{ super() }}
+    <style>
+        .posts__container {
+            align-items: center;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .posts__title {
+            font-size: 1.5rem;
+            font-weight: 550;
+            margin: 10px;
+        }
+
+        .posts__list {
+            margin: 0;
+        }
+
+        .posts__item {
+            margin: 0 0 10px 0;
+        }
+    </style>
+{% endblock %}
+{% block content %}
+    <div class="posts__container">
+        <div class="posts__title">Posts</div>
+        <ol class="posts__list">
+            {% for post in posts %}
+                <li class="posts__item">
+                    <a href="{{ post.url }}">{{ post.title }}</a> - {{ post.creator }} ({{ post.total_clap_count }})
+                </li>
+            {% endfor %}
+        </ol>
+    </div>
+{% endblock %}
