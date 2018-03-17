@@ -5,31 +5,10 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
 from time import sleep
 
+import google
 import json
 import medium
 import os
-
-
-def log_in_to_google(driver, username, password):
-    wait = WebDriverWait(driver, 10)
-
-    email_input = wait.until(
-        EC.presence_of_element_located((By.NAME, 'identifier'))
-    )
-    email_input.send_keys(username)
-
-    next_button = driver.find_element_by_id('identifierNext')
-    next_button.click()
-
-    password_input = wait.until(
-        EC.presence_of_element_located((By.NAME, 'password'))
-    )
-    password_input.send_keys(password)
-
-    next_button = wait.until(
-        EC.presence_of_element_located((By.ID, 'passwordNext'))
-    )
-    driver.execute_script("arguments[0].click();", next_button)
 
 
 def scroll_to_bottom(driver):
@@ -59,7 +38,7 @@ def main():
 
         username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
         password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
-        log_in_to_google(driver, username, password)
+        google.log_in(driver, username, password)
 
         wait.until(url_is(medium.BASE_URL))
 
