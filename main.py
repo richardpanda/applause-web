@@ -3,7 +3,6 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
-from time import sleep
 
 import google
 import json
@@ -19,8 +18,7 @@ def main():
     INITIAL_NUM_STREAM_ITEMS = 3
     MAX_POSTS = 25
     NUM_PAGES = 0
-    SHORT_SLEEP_TIME_IN_S = 1
-    LONG_SLEEP_TIME_IN_S = 3
+    SLEEP_TIME_IN_S = 1
 
     top_posts = {topic: [] for topic in medium.TOPICS}
 
@@ -55,7 +53,7 @@ def main():
                 num_stream_items += 1
 
             post_urls = medium.extract_post_urls(driver)
-            posts = medium.fetch_posts(post_urls, SHORT_SLEEP_TIME_IN_S)
+            posts = medium.fetch_posts(post_urls, SLEEP_TIME_IN_S)
 
             top_posts[topic] = sorted(
                 posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
