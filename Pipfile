@@ -10,7 +10,8 @@ name = "pypi"
 selenium = "*"
 requests = "*"
 "beautifulsoup4" = "*"
-flask = "*"
+Sanic = "*"
+"Jinja2" = "*"
 
 
 [dev-packages]
