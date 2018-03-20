@@ -8,10 +8,10 @@ name = "pypi"
 [packages]
 
 selenium = "*"
-requests = "*"
 "beautifulsoup4" = "*"
 Sanic = "*"
 "Jinja2" = "*"
+aiohttp = "*"
 
 
 [dev-packages]

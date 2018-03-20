@@ -1,14 +1,8 @@
-from expected_conditions import element_appears_n_times, url_is
 from jinja2 import Environment, PackageLoader
 from sanic import Sanic
 from sanic.response import html
-from selenium import webdriver
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
 
-import google
-import json
+import asyncio
 import medium
 import os
 
@@ -31,55 +25,18 @@ async def index(request):
     return html(template.render(topics=medium.TOPICS))
 
 
+async def update_top_posts():
+    global top_posts
+    username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
+    password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
+    top_posts = await medium.scrape_top_posts(username, password)
+
 if __name__ == '__main__':
-    app.run(port=8080)
-
-# def scroll_to_bottom(driver):
-#     driver.execute_script('window.scrollTo(0, document.body.scrollHeight);')
-
-# INITIAL_NUM_STREAM_ITEMS = 3
-# MAX_POSTS = 25
-# NUM_PAGES = 0
-# SLEEP_TIME_IN_S = 1
-
-# top_posts = {topic: [] for topic in medium.TOPICS}
-
-# driver = webdriver.Chrome()
-# wait = WebDriverWait(driver, 10)
-# driver.get(medium.SIGN_IN_URL)
-
-# try:
-#     google_signin_button = wait.until(
-#         EC.presence_of_element_located(
-#             (By.XPATH, '//button[@data-action="google-auth"]')
-#         )
-#     )
-#     google_signin_button.click()
-
-#     username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
-#     password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
-#     google.log_in(driver, username, password)
-
-#     wait.until(url_is(medium.BASE_URL))
-
-#     for topic in top_posts.keys():
-#         driver.get(medium.topic_url(topic))
-
-#         num_stream_items = INITIAL_NUM_STREAM_ITEMS
-#         for _ in range(NUM_PAGES):
-#             wait.until(
-#                 element_appears_n_times(
-#                     (By.CLASS_NAME, 'js-streamItem'), num_stream_items)
-#             )
-#             scroll_to_bottom(driver)
-#             num_stream_items += 1
-
-#         post_urls = medium.extract_post_urls(driver)
-#         posts = medium.fetch_posts(post_urls, SLEEP_TIME_IN_S)
-
-#         top_posts[topic] = sorted(
-#             posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-
-#     print(json.dumps(top_posts, indent=4))
-# finally:
-#     driver.close()
+    loop = asyncio.get_event_loop()
+    server = app.create_server(
+        host='127.0.0.1',
+        port=8080
+    )
+    asyncio.ensure_future(server, loop=loop)
+    loop.create_task(update_top_posts())
+    loop.run_forever()
