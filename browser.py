@@ -26,7 +26,7 @@ class Browser():
         INITIAL_NUM_STREAM_ITEMS = 3
         num_stream_items = INITIAL_NUM_STREAM_ITEMS
         for _ in range(num_scrolls):
-            await asyncio.sleep(0)
+            await asyncio.sleep(sleep_time_in_s)
             self.wait.until(
                 element_appears_n_times(
                     (By.CLASS_NAME, 'js-streamItem'), num_stream_items)
