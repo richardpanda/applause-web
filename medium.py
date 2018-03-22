@@ -2,6 +2,7 @@ from browser import Browser
 from bs4 import BeautifulSoup
 from collections import namedtuple
 from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
 
 import aiohttp
 import async_timeout
@@ -73,7 +74,10 @@ async def scrape_top_posts(username, password):
     SLEEP_TIME_IN_S = 1
 
     top_posts = {topic: [] for topic in TOPICS}
-    driver = webdriver.Chrome()
+
+    chrome_options = Options()
+    chrome_options.set_headless()
+    driver = webdriver.Chrome(chrome_options=chrome_options)
     browser = Browser(driver)
 
     await asyncio.sleep(0)
