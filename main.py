@@ -5,14 +5,21 @@ from sanic.response import html
 
 import asyncio
 import json
+import logging
 import medium
 import os
 
-FILENAME = 'top_posts.txt'
+LOGGING_FILENAME = 'applause.log'
+TOP_POSTS_FILENAME = 'top_posts.txt'
 
 app = Sanic(__name__)
 app.static('/static', './static')
 
+logging.basicConfig(
+    filename=LOGGING_FILENAME,
+    format='%(asctime)s - %(levelname)s - %(message)s',
+    level=logging.DEBUG
+)
 env = Environment(loader=PackageLoader('main', 'templates'))
 top_posts = {topic: [] for topic in medium.TOPICS}
 
@@ -37,25 +44,38 @@ def secs_until_midnight(dt_now):
 
 async def update_top_posts():
     global top_posts
+
     username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
     password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
+
     while True:
+        logging.info('Starting Medium scraper')
         top_posts = await medium.scrape_top_posts(username, password)
-        with open(FILENAME, 'w') as f:
+        logging.info('Finished scraping Medium posts')
+        with open(TOP_POSTS_FILENAME, 'w') as f:
+            logging.info('Saving top posts to {}'.format(TOP_POSTS_FILENAME))
             json.dump(top_posts, f)
+        sleep_time_in_s = secs_until_midnight(datetime.now())
+        logging.info(
+            'Sleeping Medium scraper for {} seconds'.format(
+                int(sleep_time_in_s)
+            )
+        )
         await asyncio.sleep(secs_until_midnight(datetime.now()))
 
 
 if __name__ == '__main__':
     try:
-        with open(FILENAME, 'r') as f:
+        with open(TOP_POSTS_FILENAME, 'r') as f:
+            logging.info('Loading top posts from {}'.format(
+                TOP_POSTS_FILENAME))
             top_posts_json = json.load(f)
             top_posts = {
                 topic: [medium.Post(*post) for post in posts]
                 for topic, posts in top_posts_json.items()
             }
     except IOError:
-        print('top_posts.txt does not exist')
+        logging.info('{} does not exist'.format(TOP_POSTS_FILENAME))
 
     loop = asyncio.get_event_loop()
     server = app.create_server(
@@ -64,4 +84,5 @@ if __name__ == '__main__':
     )
     asyncio.ensure_future(server, loop=loop)
     loop.create_task(update_top_posts())
+    logging.info('Starting web server and scraper')
     loop.run_forever()

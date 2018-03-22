@@ -3,11 +3,13 @@ from bs4 import BeautifulSoup
 from collections import namedtuple
 from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.remote_connection import LOGGER
 
 import aiohttp
 import async_timeout
 import asyncio
 import json
+import logging
 import re
 
 BASE_URL = 'https://medium.com/'
@@ -16,6 +18,8 @@ TOPICS = [
     'programming',
     'software-engineering'
 ]
+
+LOGGER.setLevel(logging.WARNING)
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
 
@@ -57,13 +61,18 @@ async def fetch_page(url):
                 return await response.text()
 
 
-async def fetch_posts(urls, sleep_time_in_s=0):
+async def fetch_posts(topic, urls, sleep_time_in_s=0):
+    logging.info('Fetching posts from {}'.format(topic))
     posts = []
     for url in urls:
-        print(url)
+        logging.debug('Visiting {}'.format(url))
         page = await fetch_page(url)
         post = extract_post(page)
         posts.append(post)
+        logging.debug('Sleeping for {} second{}'.format(
+            sleep_time_in_s,
+            '' if sleep_time_in_s == 1 else 's'
+        ))
         await asyncio.sleep(sleep_time_in_s)
     return posts
 
@@ -91,14 +100,17 @@ async def scrape_top_posts(username, password):
             browser.navigate_to_url(topic_url(topic))
             await browser.scroll_to_bottom_n_times(NUM_PAGES)
 
+            logging.info('Extracting post urls from {}'.format(topic))
             post_urls = browser.extract_post_urls_from_current_page()
-            posts = await fetch_posts(post_urls, SLEEP_TIME_IN_S)
+            posts = await fetch_posts(topic, post_urls, SLEEP_TIME_IN_S)
 
             top_posts[topic] = sorted(
                 posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
+            logging.info('Finished fetching top posts from {}'.format(topic))
 
         return top_posts
     finally:
+        logging.info('Closing browser')
         browser.close()
 
 
