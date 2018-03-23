@@ -85,7 +85,8 @@ async def scrape_top_posts(username, password):
     top_posts = {topic: [] for topic in TOPICS}
 
     chrome_options = Options()
-    chrome_options.set_headless()
+    chrome_options.add_argument('--headless')
+    chrome_options.add_argument('--no-sandbox')
     driver = webdriver.Chrome(chrome_options=chrome_options)
     browser = Browser(driver)
 

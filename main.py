@@ -79,8 +79,8 @@ if __name__ == '__main__':
 
     loop = asyncio.get_event_loop()
     server = app.create_server(
-        host='127.0.0.1',
-        port=8080
+        host='0.0.0.0',
+        port=int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080))
     )
     asyncio.ensure_future(server, loop=loop)
     loop.create_task(update_top_posts())

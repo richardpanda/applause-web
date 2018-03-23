@@ -1,0 +1,21 @@
+aiofiles==0.3.2
+aiohttp==3.0.9
+async-timeout==2.0.1
+asyncio==3.4.3; python_version == '3.3'
+attrs==17.4.0
+beautifulsoup4==4.6.0
+chardet==3.0.4
+httptools==0.0.10
+idna-ssl==1.0.1
+idna==2.6
+jinja2==2.10
+markupsafe==1.0
+multidict==4.1.0
+sanic==0.7.0
+selenium==3.11.0
+singledispatch==3.4.0.3; python_version == '3.3'
+six==1.11.0
+ujson==1.35
+uvloop==0.9.1
+websockets==4.0.1
+yarl==1.1.1
