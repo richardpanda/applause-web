@@ -47,6 +47,65 @@ class Browser():
                 num_stream_items - INITIAL_NUM_STREAM_ITEMS)
             )
 
+    async def sign_in_to_facebook(self, username, password, sleep_time_in_s=0):
+        await asyncio.sleep(sleep_time_in_s)
+        logging.info('Waiting for username input to be present')
+        email_input = self.wait.until(
+            EC.presence_of_element_located((By.ID, 'email'))
+        )
+        logging.info('Entering Facebook username')
+        email_input.send_keys(username)
+
+        # await asyncio.sleep(sleep_time_in_s)
+        # logging.info('Clicking on next button')
+        # next_button = self.driver.find_element_by_id('identifierNext')
+        # next_button.click()
+
+        # await asyncio.sleep(sleep_time_in_s)
+        # logging.info('Waiting for password input to be present')
+        # password_input = self.wait.until(
+        #     EC.visibility_of_element_located((By.NAME, 'password'))
+        # )
+        await asyncio.sleep(sleep_time_in_s)
+        password_input = self.driver.find_element_by_id('pass')
+        # password_input = self.wait.until(
+        #     EC.presence_of_element_located((By.ID, 'pass'))
+        # )
+        logging.info('Entering Facebook password')
+        password_input.send_keys(password)
+
+        await asyncio.sleep(sleep_time_in_s)
+        login_button = self.driver.find_element_by_id('loginbutton')
+        # logging.info('Waiting for next button to be present')
+        # next_button = self.wait.until(
+        #     EC.presence_of_element_located((By.ID, 'passwordNext'))
+        # )
+        logging.info('Clicking on login button')
+        self.driver.execute_script("arguments[0].click();", login_button)
+
+    async def sign_in_to_medium_with_facebook(self, username, password, sleep_time_in_s=0):
+        await asyncio.sleep(sleep_time_in_s)
+        self.navigate_to_url(medium.SIGN_IN_URL)
+
+        await asyncio.sleep(sleep_time_in_s)
+        logging.info('Waiting for Facebook sign in button')
+        facebook_signin_button = self.wait.until(
+            EC.presence_of_element_located(
+                (By.XPATH, '//button[@data-action="facebook-auth"]')
+            )
+        )
+
+        await asyncio.sleep(sleep_time_in_s)
+        logging.info('Clicking on Facebook sign in button')
+        facebook_signin_button.click()
+
+        await asyncio.sleep(sleep_time_in_s)
+        await self.sign_in_to_facebook(username, password, sleep_time_in_s)
+
+        await asyncio.sleep(sleep_time_in_s)
+        logging.info('Waiting for redirect to Medium')
+        self.wait.until(url_is(medium.BASE_URL))
+
     async def sign_in_to_google(self, username, password, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)
         logging.info('Waiting for username input to be present')

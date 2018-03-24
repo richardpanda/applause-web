@@ -93,7 +93,7 @@ async def scrape_top_posts(username, password):
     await asyncio.sleep(0)
 
     try:
-        await browser.sign_in_to_medium_with_google(username, password)
+        await browser.sign_in_to_medium_with_facebook(username, password)
 
         for topic in TOPICS:
             await asyncio.sleep(0)

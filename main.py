@@ -45,8 +45,8 @@ def secs_until_midnight(dt_now):
 async def update_top_posts():
     global top_posts
 
-    username = os.environ['APPLAUSE_WEB__GOOGLE_USERNAME']
-    password = os.environ['APPLAUSE_WEB__GOOGLE_PASSWORD']
+    username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
+    password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
 
     while True:
         logging.info('Starting Medium scraper')
