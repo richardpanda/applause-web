@@ -9,10 +9,18 @@
             flex-direction: column;
         }
 
+        .topics__header {
+            margin: 10px;
+            text-align: center;
+        }
+
         .topics__title {
             font-size: 1.5rem;
             font-weight: 550;
-            margin: 10px;
+        }
+
+        .topics__last_updated {
+            font-size: 0.9rem;
         }
 
         .topics__list {
@@ -26,7 +34,12 @@
 {% endblock %}
 {% block content %}
     <div class="topics__container">
-        <div class="topics__title">Topics</div>
+        <div class="topics__header">
+            <div class="topics__title">Topics</div>
+            {% if last_updated %}
+                <div class="topics__last_updated">Last updated: {{ last_updated }}</div>
+            {% endif %}
+        </div>
         <ol class="topics__list">
             {% for topic in topics %}
                 <li class="topics__item">
