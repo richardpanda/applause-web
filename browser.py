@@ -56,30 +56,14 @@ class Browser():
         logging.info('Entering Facebook username')
         email_input.send_keys(username)
 
-        # await asyncio.sleep(sleep_time_in_s)
-        # logging.info('Clicking on next button')
-        # next_button = self.driver.find_element_by_id('identifierNext')
-        # next_button.click()
-
-        # await asyncio.sleep(sleep_time_in_s)
-        # logging.info('Waiting for password input to be present')
-        # password_input = self.wait.until(
-        #     EC.visibility_of_element_located((By.NAME, 'password'))
-        # )
         await asyncio.sleep(sleep_time_in_s)
         password_input = self.driver.find_element_by_id('pass')
-        # password_input = self.wait.until(
-        #     EC.presence_of_element_located((By.ID, 'pass'))
-        # )
+
         logging.info('Entering Facebook password')
         password_input.send_keys(password)
 
         await asyncio.sleep(sleep_time_in_s)
         login_button = self.driver.find_element_by_id('loginbutton')
-        # logging.info('Waiting for next button to be present')
-        # next_button = self.wait.until(
-        #     EC.presence_of_element_located((By.ID, 'passwordNext'))
-        # )
         logging.info('Clicking on login button')
         self.driver.execute_script("arguments[0].click();", login_button)
 
@@ -101,59 +85,6 @@ class Browser():
 
         await asyncio.sleep(sleep_time_in_s)
         await self.sign_in_to_facebook(username, password, sleep_time_in_s)
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Waiting for redirect to Medium')
-        self.wait.until(url_is(medium.BASE_URL))
-
-    async def sign_in_to_google(self, username, password, sleep_time_in_s=0):
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Waiting for username input to be present')
-        email_input = self.wait.until(
-            EC.presence_of_element_located((By.NAME, 'identifier'))
-        )
-        logging.info('Entering Google username')
-        email_input.send_keys(username)
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Clicking on next button')
-        next_button = self.driver.find_element_by_id('identifierNext')
-        next_button.click()
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Waiting for password input to be present')
-        password_input = self.wait.until(
-            EC.visibility_of_element_located((By.NAME, 'password'))
-        )
-        logging.info('Entering Google password')
-        password_input.send_keys(password)
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Waiting for next button to be present')
-        next_button = self.wait.until(
-            EC.presence_of_element_located((By.ID, 'passwordNext'))
-        )
-        logging.info('Clicking on next button')
-        self.driver.execute_script("arguments[0].click();", next_button)
-
-    async def sign_in_to_medium_with_google(self, username, password, sleep_time_in_s=0):
-        await asyncio.sleep(sleep_time_in_s)
-        self.navigate_to_url(medium.SIGN_IN_URL)
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Waiting for Google sign in button')
-        google_signin_button = self.wait.until(
-            EC.presence_of_element_located(
-                (By.XPATH, '//button[@data-action="google-auth"]')
-            )
-        )
-
-        await asyncio.sleep(sleep_time_in_s)
-        logging.info('Clicking on Google sign in button')
-        google_signin_button.click()
-
-        await asyncio.sleep(sleep_time_in_s)
-        await self.sign_in_to_google(username, password, sleep_time_in_s)
 
         await asyncio.sleep(sleep_time_in_s)
         logging.info('Waiting for redirect to Medium')
