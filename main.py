@@ -1,6 +1,6 @@
 from datetime import datetime, timedelta
 from jinja2 import Environment, PackageLoader
-from sanic import Sanic
+from sanic import response, Sanic
 from sanic.response import html
 
 import asyncio
@@ -28,6 +28,20 @@ top_posts = {
 }
 
 
+@app.route('/')
+async def index(request):
+    template = env.get_template('index.html')
+    return html(template.render(
+        last_updated=top_posts['last_updated'],
+        topics=medium.TOPICS
+    ))
+
+
+@app.route('/favicon.ico')
+async def favicon(request):
+    return await response.file('./static/favicon.ico')
+
+
 @app.route('/topic/<topic:string>')
 async def show_posts(request, topic):
     template = env.get_template('posts.html')
@@ -35,15 +49,6 @@ async def show_posts(request, topic):
         last_updated=top_posts['last_updated'],
         posts=top_posts['by_topic'][topic],
         topic=topic
-    ))
-
-
-@app.route('/')
-async def index(request):
-    template = env.get_template('index.html')
-    return html(template.render(
-        last_updated=top_posts['last_updated'],
-        topics=medium.TOPICS
     ))
 
 
