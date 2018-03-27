@@ -71,7 +71,7 @@ def load_top_posts_from_file(top_posts, filename):
 def secs_until_midnight(dt_now):
     dt_tomorrow = timedelta(days=1) + dt_now
     dt_midnight = dt_tomorrow.replace(hour=0, minute=0, second=0)
-    return (dt_midnight - dt_now).total_seconds()
+    return int((dt_midnight - dt_now).total_seconds())
 
 
 async def update_top_posts(top_posts):
@@ -93,10 +93,10 @@ async def update_top_posts(top_posts):
         sleep_time_in_s = secs_until_midnight(datetime.now())
         logging.info(
             'Waking up Medium scraper in {} seconds'.format(
-                int(sleep_time_in_s)
+                sleep_time_in_s
             )
         )
-        await asyncio.sleep(secs_until_midnight(datetime.now()))
+        await asyncio.sleep(sleep_time_in_s)
 
 
 def main():
