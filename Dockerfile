@@ -16,6 +16,7 @@ RUN pip install --no-cache-dir -r requirements.txt
 
 COPY . .
 
+ENV APPLAUSE_WEB__ENV="production"
 ENV APPLAUSE_WEB__FACEBOOK_USERNAME=""
 ENV APPLAUSE_WEB__FACEBOOK_PASSWORD=""
 ENV APPLAUSE_WEB__SERVER_PORT="80"

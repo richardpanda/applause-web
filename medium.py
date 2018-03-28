@@ -10,6 +10,7 @@ import async_timeout
 import asyncio
 import json
 import logging
+import os
 import re
 
 BASE_URL = 'https://medium.com/'
@@ -79,7 +80,8 @@ async def fetch_posts(topic, urls, sleep_time_in_s=0):
 
 async def scrape_top_posts(username, password):
     MAX_POSTS = 25
-    NUM_PAGES = 0
+    NUM_PAGES = (5 if os.environ.get('APPLAUSE_WEB__ENV', '') == 'production'
+                 else 0)
     SLEEP_TIME_IN_S = 1
 
     top_posts = {topic: [] for topic in TOPICS}
