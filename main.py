@@ -54,6 +54,10 @@ async def show_posts(request, topic):
 
 def load_top_posts_from_file(top_posts, filename):
     try:
+        if os.stat(filename).st_size == 0:
+            logging.info('{} is empty.'.format(filename))
+            return
+
         with open(filename, 'r') as f:
             logging.info('Loading top posts from {}'.format(
                 filename
@@ -64,7 +68,7 @@ def load_top_posts_from_file(top_posts, filename):
                 for topic, posts in top_posts_json['by_topic'].items()
             }
             top_posts['last_updated'] = top_posts_json['last_updated']
-    except IOError:
+    except (IOError, OSError):
         logging.info('{} does not exist'.format(filename))
 
 
