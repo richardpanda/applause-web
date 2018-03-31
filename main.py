@@ -1,55 +1,11 @@
 from datetime import datetime, timedelta
-from jinja2 import Environment, PackageLoader
-from sanic import response, Sanic
-from sanic.response import html
 
 import asyncio
 import json
 import logging
 import medium
+import tornado.web
 import os
-
-LOGGING_FILENAME = 'applause.log'
-TOP_POSTS_FILENAME = 'top_posts.txt'
-
-app = Sanic(__name__)
-app.static('/static', './static')
-
-logging.basicConfig(
-    filename=LOGGING_FILENAME,
-    format='%(asctime)s - %(levelname)s - %(message)s',
-    level=logging.DEBUG
-)
-env = Environment(loader=PackageLoader('main', 'templates'))
-
-top_posts = {
-    'by_topic': {topic: [] for topic in medium.TOPICS},
-    'last_updated': ''
-}
-
-
-@app.route('/')
-async def index(request):
-    template = env.get_template('index.html')
-    return html(template.render(
-        last_updated=top_posts['last_updated'],
-        topics=medium.TOPICS
-    ))
-
-
-@app.route('/favicon.ico')
-async def favicon(request):
-    return await response.file('./static/favicon.ico')
-
-
-@app.route('/topic/<topic:string>')
-async def show_posts(request, topic):
-    template = env.get_template('posts.html')
-    return html(template.render(
-        last_updated=top_posts['last_updated'],
-        posts=top_posts['by_topic'][topic],
-        topic=topic
-    ))
 
 
 def load_top_posts_from_file(top_posts, filename):
@@ -78,7 +34,7 @@ def secs_until_midnight(dt_now):
     return int((dt_midnight - dt_now).total_seconds())
 
 
-async def update_top_posts(top_posts):
+async def update_top_posts(top_posts, filename):
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
 
@@ -90,8 +46,8 @@ async def update_top_posts(top_posts):
         )
         logging.info('Finished scraping Medium posts')
 
-        logging.info('Saving top posts to {}'.format(TOP_POSTS_FILENAME))
-        with open(TOP_POSTS_FILENAME, 'w') as f:
+        logging.info('Saving top posts to {}'.format(filename))
+        with open(filename, 'w') as f:
             json.dump(top_posts, f)
 
         sleep_time_in_s = secs_until_midnight(datetime.now())
@@ -103,16 +59,61 @@ async def update_top_posts(top_posts):
         await asyncio.sleep(sleep_time_in_s)
 
 
+class IndexHandler(tornado.web.RequestHandler):
+    def initialize(self, top_posts):
+        self.top_posts = top_posts
+
+    def get(self):
+        self.render(
+            'index.html',
+            last_updated=self.top_posts['last_updated'],
+            topics=sorted(self.top_posts['by_topic'].keys())
+        )
+
+
+class TopicHandler(tornado.web.RequestHandler):
+    def initialize(self, top_posts):
+        self.top_posts = top_posts
+
+    def get(self, topic):
+        self.render(
+            'posts.html',
+            last_updated=self.top_posts['last_updated'],
+            posts=self.top_posts['by_topic'][topic],
+            topic=topic
+        )
+
+
 def main():
+    LOGGING_FILENAME = 'applause.log'
+    TOP_POSTS_FILENAME = 'top_posts.txt'
+
+    logging.basicConfig(
+        filename=LOGGING_FILENAME,
+        format='%(asctime)s - %(levelname)s - %(message)s',
+        level=logging.DEBUG
+    )
+
+    top_posts = {
+        'by_topic': {topic: [] for topic in medium.TOPICS},
+        'last_updated': ''
+    }
     load_top_posts_from_file(top_posts, TOP_POSTS_FILENAME)
 
     loop = asyncio.get_event_loop()
-    server = app.create_server(
-        host='0.0.0.0',
-        port=int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080))
+
+    handlers = [
+        (r'/', IndexHandler, {'top_posts': top_posts}),
+        (r'/topic/([\w-]+)', TopicHandler, {'top_posts': top_posts})
+    ]
+    app = tornado.web.Application(
+        handlers=handlers,
+        static_path='static',
+        template_path='templates'
     )
-    asyncio.ensure_future(server, loop=loop)
-    loop.create_task(update_top_posts(top_posts))
+    app.listen(int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080)))
+
+    loop.create_task(update_top_posts(top_posts, TOP_POSTS_FILENAME))
     logging.info('Starting web server and scraper')
     loop.run_forever()
 

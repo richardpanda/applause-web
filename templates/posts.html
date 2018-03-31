@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
-{% block title %}Applause - {{ topic.title().replace('-', ' ') }}{% endblock %}
-{% block head %}
-    {{ super() }}
+{% block title %}Applause - {{ topic.title().replace('-', ' ') }}{% end %}
+{% block styles %}
     <style>
         .posts__container {
             align-items: center;
@@ -31,21 +30,21 @@
             margin: 0 0 10px 0;
         }
     </style>
-{% endblock %}
+{% end %}
 {% block content %}
     <div class="posts__container">
         <div class="posts__header">
             <div class="posts__title">Posts</div>
             {% if last_updated %}
                 <div class="posts__last_updated">Last updated: {{ last_updated }}</div>
-            {% endif %}
+            {% end %}
         </div>
         <ol class="posts__list">
             {% for post in posts %}
                 <li class="posts__item">
                     <a href="{{ post.url }}">{{ post.title }}</a> - {{ post.creator }} ({{ post.total_clap_count }})
                 </li>
-            {% endfor %}
+            {% end %}
         </ol>
     </div>
-{% endblock %}
+{% end %}

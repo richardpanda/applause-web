@@ -1,7 +1,6 @@
 {% extends 'layout.html' %}
-{% block title %}Applause{% endblock %}
-{% block head %}
-    {{ super() }}
+{% block title %}Applause{% end %}
+{% block styles %}
     <style>
         .topics__container {
             align-items: center;
@@ -31,14 +30,14 @@
             margin: 0 0 10px 0;
         }
     </style>
-{% endblock %}
+{% end %}
 {% block content %}
     <div class="topics__container">
         <div class="topics__header">
             <div class="topics__title">Topics</div>
             {% if last_updated %}
                 <div class="topics__last_updated">Last updated: {{ last_updated }}</div>
-            {% endif %}
+            {% end %}
         </div>
         <ol class="topics__list">
             {% for topic in topics %}
@@ -47,7 +46,7 @@
                         {{ topic.title().replace('-', ' ') }}
                     </a>
                 </li>
-            {% endfor %}
+            {% end %}
         </ol>
     </div>
-{% endblock %}
+{% end %}

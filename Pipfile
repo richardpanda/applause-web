@@ -9,9 +9,8 @@ name = "pypi"
 
 selenium = "*"
 "beautifulsoup4" = "*"
-Sanic = "*"
-"Jinja2" = "*"
 aiohttp = "*"
+tornado = "*"
 
 
 [dev-packages]
