@@ -5,6 +5,7 @@ from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER
 
 import asyncio
+import env
 import json
 import logging
 import medium
@@ -51,8 +52,7 @@ def secs_until_midnight(dt_now):
 
 async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
     MAX_POSTS = 25
-    NUM_PAGES = (5 if os.environ.get('APPLAUSE_WEB__ENV', '') == 'production'
-                 else 0)
+    NUM_PAGES = 5 if env.is_production() else 0
 
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']

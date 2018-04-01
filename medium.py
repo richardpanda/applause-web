@@ -4,15 +4,15 @@ from collections import namedtuple
 import aiohttp
 import async_timeout
 import asyncio
+import env
 import json
 import logging
-import os
 import re
 
 BASE_URL = 'https://medium.com/'
 SIGN_IN_URL = '{}m/signin'.format(BASE_URL)
 
-if os.environ.get('APPLAUSE_WEB__ENV', '') == 'production':
+if env.is_production():
     TOPICS = [
         'art',
         'artificial-intelligence',
