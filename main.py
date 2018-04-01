@@ -15,31 +15,29 @@ import os
 LAST_UPDATED_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
-def latest_datetime_str(dt_strs):
-    sorted_dt_strs = sorted(
-        [dt_str for dt_str in dt_strs if dt_str],
-        key=lambda dt: datetime.strptime(dt, LAST_UPDATED_FORMAT),
-        reverse=True
-    )
-    return sorted_dt_strs[0] if sorted_dt_strs else ''
-
-
-def load_top_posts_from_file(top_posts, filename):
+def load_app_state_from_file(app_state, filename, topics):
     try:
         if os.stat(filename).st_size == 0:
             logging.info('{} is empty.'.format(filename))
             return
 
         with open(filename, 'r') as f:
-            logging.info('Loading top posts from {}'.format(
-                filename
-            ))
-            top_posts_json = json.load(f)
-            for topic, top_posts_obj in top_posts_json.items():
-                top_posts[topic]['list'] = [
+            logging.info('Loading top posts from {}'.format(filename))
+            app_state_json = json.load(f)
+
+            for topic, top_posts_obj in app_state_json['top_posts'].items():
+                app_state['top_posts'][topic]['list'] = [
                     medium.Post(*post) for post in top_posts_obj['list']
                 ]
-                top_posts[topic]['last_updated'] = top_posts_obj['last_updated']
+                app_state['top_posts'][topic]['last_updated'] = top_posts_obj['last_updated']
+
+            app_state['topic_index'] = app_state_json['topic_index']
+
+            last_updated_topic = topics[
+                (app_state['topic_index']-1)
+            ]
+            app_state['last_updated'] = app_state['top_posts'][last_updated_topic]['last_updated']
+
     except (IOError, OSError):
         logging.info('{} does not exist'.format(filename))
 
@@ -50,7 +48,7 @@ def secs_until_midnight(dt_now):
     return int((dt_midnight - dt_now).total_seconds())
 
 
-async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
+async def update_app_state(app_state, filename, sleep_time_in_s=0):
     MAX_POSTS = 25
     NUM_PAGES = 5 if env.is_production() else 1
 
@@ -72,7 +70,9 @@ async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
             await asyncio.sleep(0)
             await browser.sign_in_to_medium_with_facebook(username, password)
 
-            for topic in medium.TOPICS:
+            num_topics = len(medium.TOPICS)
+            for _ in range(num_topics):
+                topic = medium.TOPICS[app_state['topic_index']]
                 await asyncio.sleep(0)
 
                 browser.navigate_to_url(medium.topic_url(topic))
@@ -82,11 +82,15 @@ async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
                 post_urls = browser.extract_post_urls_from_current_page()
                 posts = await medium.fetch_posts(topic, post_urls, sleep_time_in_s)
 
-                top_posts[topic]['list'] = sorted(
+                app_state['top_posts'][topic]['list'] = sorted(
                     posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-                top_posts[topic]['last_updated'] = datetime.now().strftime(
+                app_state['top_posts'][topic]['last_updated'] = datetime.now().strftime(
                     LAST_UPDATED_FORMAT
                 )
+
+                app_state['last_updated'] = app_state['top_posts'][topic]['last_updated']
+                app_state['topic_index'] += 1
+                app_state['topic_index'] %= num_topics
 
                 logging.info(
                     'Finished fetching top posts from {}'.format(topic)
@@ -94,7 +98,7 @@ async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
 
                 logging.info('Saving top posts to {}'.format(filename))
                 with open(filename, 'w') as f:
-                    json.dump(top_posts, f)
+                    json.dump(app_state, f)
         finally:
             logging.info('Closing browser')
             browser.close()
@@ -111,19 +115,15 @@ async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
 
 
 class IndexHandler(tornado.web.RequestHandler):
-    def initialize(self, top_posts):
-        self.top_posts = top_posts
+    def initialize(self, app_state, topics):
+        self.app_state = app_state
+        self.topics = topics
 
     def get(self):
-        last_updated_strs = [
-            top_posts_obj['last_updated']
-            for top_posts_obj in self.top_posts.values()
-        ]
-
         self.render(
             'index.html',
-            last_updated=latest_datetime_str(last_updated_strs),
-            topics=medium.TOPICS
+            last_updated=self.app_state['last_updated'],
+            topics=self.topics
         )
 
 
@@ -141,9 +141,9 @@ class TopicHandler(tornado.web.RequestHandler):
 
 
 def main():
+    APP_STATE_FILENAME = 'app_state.txt'
     LOGGING_FILENAME = 'applause.log'
     SLEEP_TIME_IN_S = 2 if env.is_production() else 1
-    TOP_POSTS_FILENAME = 'top_posts.txt'
 
     LOGGER.setLevel(logging.WARNING)
     logging.basicConfig(
@@ -156,13 +156,20 @@ def main():
         topic: dict(list=[], last_updated='')
         for topic in medium.TOPICS
     }
-    load_top_posts_from_file(top_posts, TOP_POSTS_FILENAME)
+    app_state = dict(
+        last_updated='',
+        top_posts=top_posts,
+        topic_index=0
+    )
+    load_app_state_from_file(app_state, APP_STATE_FILENAME, medium.TOPICS)
 
     loop = asyncio.get_event_loop()
 
     handlers = [
-        (r'/', IndexHandler, {'top_posts': top_posts}),
-        (r'/topic/([\w-]+)', TopicHandler, {'top_posts': top_posts})
+        (r'/', IndexHandler,
+            {'app_state': app_state, 'topics': medium.TOPICS}),
+        (r'/topic/([\w-]+)', TopicHandler,
+            {'top_posts': app_state['top_posts']})
     ]
     app = tornado.web.Application(
         handlers=handlers,
@@ -171,8 +178,8 @@ def main():
     )
     app.listen(int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080)))
 
-    loop.create_task(update_top_posts(
-        top_posts, TOP_POSTS_FILENAME, SLEEP_TIME_IN_S
+    loop.create_task(update_app_state(
+        app_state, APP_STATE_FILENAME, SLEEP_TIME_IN_S
     ))
     logging.info('Starting web server and scraper')
     loop.run_forever()
