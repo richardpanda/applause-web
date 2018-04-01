@@ -52,7 +52,7 @@ def secs_until_midnight(dt_now):
 
 async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
     MAX_POSTS = 25
-    NUM_PAGES = 5 if env.is_production() else 0
+    NUM_PAGES = 5 if env.is_production() else 1
 
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
@@ -142,7 +142,7 @@ class TopicHandler(tornado.web.RequestHandler):
 
 def main():
     LOGGING_FILENAME = 'applause.log'
-    SLEEP_TIME_IN_S = 1
+    SLEEP_TIME_IN_S = 2 if env.is_production() else 1
     TOP_POSTS_FILENAME = 'top_posts.txt'
 
     LOGGER.setLevel(logging.WARNING)
