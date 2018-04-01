@@ -11,10 +11,70 @@ import re
 
 BASE_URL = 'https://medium.com/'
 SIGN_IN_URL = '{}m/signin'.format(BASE_URL)
-TOPICS = [
-    'programming',
-    'software-engineering'
-]
+
+if os.environ.get('APPLAUSE_WEB__ENV', '') == 'production':
+    TOPICS = [
+        'art',
+        'artificial-intelligence',
+        'basic-income',
+        'business',
+        'comics',
+        'creativity',
+        'cryptocurrency',
+        'culture',
+        'cybersecurity',
+        'data-science',
+        'digital-design',
+        'economy',
+        'education',
+        'entrepreneurship',
+        'environment',
+        'equality',
+        'family',
+        'film',
+        'food',
+        'freelancing',
+        'future',
+        'gun-control',
+        'health',
+        'history',
+        'humor',
+        'javascript',
+        'lit',
+        'marketing',
+        'math',
+        'media',
+        'mental-health',
+        'music',
+        'neuroscience',
+        'personal-finance',
+        'philosophy',
+        'photography',
+        'politics',
+        'productivity',
+        'programming',
+        'psychology',
+        'relationships',
+        'science',
+        'self',
+        'sexuality',
+        'social-media',
+        'software-engineering',
+        'space',
+        'spirituality',
+        'sports',
+        'technology',
+        'travel',
+        'true-crime',
+        'wellness',
+        'work',
+        'world'
+    ]
+else:
+    TOPICS = [
+        'programming',
+        'software-engineering'
+    ]
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
 
