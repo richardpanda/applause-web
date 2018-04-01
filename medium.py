@@ -103,7 +103,7 @@ def extract_post(html_doc):
 
     title = post_info_json['name']
     creator = post_info_json['author']['name']
-    url = post_info_json['mainEntityOfPage']
+    url = soup.find('meta', {'property': 'og:url'})['content']
     total_clap_count = int(match.group(1))
 
     return Post(title, creator, url, total_clap_count)
