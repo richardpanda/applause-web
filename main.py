@@ -133,7 +133,7 @@ class TopicHandler(tornado.web.RequestHandler):
             'posts.html',
             last_updated=self.top_posts[topic]['last_updated'],
             posts=self.top_posts[topic]['list'],
-            topic=topic
+            topic=topic.title().replace('-', ' ')
         )
 
 

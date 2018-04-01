@@ -1,5 +1,5 @@
 {% extends 'layout.html' %}
-{% block title %}Applause - {{ topic.title().replace('-', ' ') }}{% end %}
+{% block title %}Applause - {{ topic }}{% end %}
 {% block styles %}
     <style>
         .posts__container {
@@ -34,7 +34,7 @@
 {% block content %}
     <div class="posts__container">
         <div class="posts__header">
-            <div class="posts__title">Posts</div>
+            <div class="posts__title">{{ topic }}</div>
             {% if last_updated %}
                 <div class="posts__last_updated">Last updated: {{ last_updated }}</div>
             {% end %}
