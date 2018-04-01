@@ -1,9 +1,5 @@
-from browser import Browser
 from bs4 import BeautifulSoup
 from collections import namedtuple
-from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.remote.remote_connection import LOGGER
 
 import aiohttp
 import async_timeout
@@ -19,8 +15,6 @@ TOPICS = [
     'programming',
     'software-engineering'
 ]
-
-LOGGER.setLevel(logging.WARNING)
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
 
@@ -76,45 +70,6 @@ async def fetch_posts(topic, urls, sleep_time_in_s=0):
         ))
         await asyncio.sleep(sleep_time_in_s)
     return posts
-
-
-async def scrape_top_posts(username, password):
-    MAX_POSTS = 25
-    NUM_PAGES = (5 if os.environ.get('APPLAUSE_WEB__ENV', '') == 'production'
-                 else 0)
-    SLEEP_TIME_IN_S = 1
-
-    top_posts = {topic: [] for topic in TOPICS}
-
-    chrome_options = Options()
-    chrome_options.add_argument('--headless')
-    chrome_options.add_argument('--no-sandbox')
-    driver = webdriver.Chrome(chrome_options=chrome_options)
-    browser = Browser(driver)
-
-    await asyncio.sleep(0)
-
-    try:
-        await browser.sign_in_to_medium_with_facebook(username, password)
-
-        for topic in TOPICS:
-            await asyncio.sleep(0)
-
-            browser.navigate_to_url(topic_url(topic))
-            await browser.scroll_to_bottom_n_times(NUM_PAGES)
-
-            logging.info('Extracting post urls from {}'.format(topic))
-            post_urls = browser.extract_post_urls_from_current_page()
-            posts = await fetch_posts(topic, post_urls, SLEEP_TIME_IN_S)
-
-            top_posts[topic] = sorted(
-                posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-            logging.info('Finished fetching top posts from {}'.format(topic))
-
-        return top_posts
-    finally:
-        logging.info('Closing browser')
-        browser.close()
 
 
 def topic_url(topic):
