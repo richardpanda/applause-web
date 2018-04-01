@@ -69,6 +69,9 @@ async def update_top_posts(top_posts, filename, sleep_time_in_s=0):
             driver = webdriver.Chrome(chrome_options=chrome_options)
             browser = Browser(driver)
 
+            await asyncio.sleep(0)
+            await browser.sign_in_to_medium_with_facebook(username, password)
+
             for topic in medium.TOPICS:
                 await asyncio.sleep(0)
 
