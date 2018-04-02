@@ -2,51 +2,28 @@
 {% block title %}Applause{% end %}
 {% block styles %}
     <style>
-        .topics__container {
-            align-items: center;
-            display: flex;
-            flex-direction: column;
-        }
-
         .topics__header {
             margin: 10px;
             text-align: center;
         }
-
-        .topics__title {
-            font-size: 1.5rem;
-            font-weight: 550;
-        }
-
-        .topics__last_updated {
-            font-size: 0.9rem;
-        }
-
-        .topics__list {
-            margin: 0;
-        }
-
-        .topics__item {
-            margin: 0 0 10px 0;
-        }
     </style>
 {% end %}
 {% block content %}
-    <div class="topics__container">
-        <div class="topics__header">
-            <div class="topics__title">Topics</div>
-            {% if last_updated %}
-                <div class="topics__last_updated">Last updated: {{ last_updated }}</div>
+    <div>
+        <div class="list__header">
+            <h2 class="ui header">
+                Topics
+                {% if last_updated %}
+                    <div class="sub header">Last updated: {{ last_updated }}</div>
+                {% end %}
+            </h2>
+        </div>
+        <div class="ui ordered list">
+            {% for topic in topics %}
+                <a class="item" href="topic/{{ topic }}">
+                    {{ topic.title().replace('-', ' ') }}
+                </a>
             {% end %}
         </div>
-        <ol class="topics__list">
-            {% for topic in topics %}
-                <li class="topics__item">
-                    <a href="topic/{{ topic }}">
-                        {{ topic.title().replace('-', ' ') }}
-                    </a>
-                </li>
-            {% end %}
-        </ol>
     </div>
 {% end %}

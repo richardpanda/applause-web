@@ -4,18 +4,18 @@
 <head>
     <title>{% block title %}{% end %}</title>
     <link rel="stylesheet" href="/static/style.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/semantic.css">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/semantic-ui/2.3.1/components/icon.min.css">
     {% block styles %}{% end %}
 </head>
 
 <body>
-    <div class="hero__container">
-        <div class="hero__title">Applause</div>
-        <div class="hero__subtitle">Top 25 Medium Posts of the Day</div>
-    </div>
-    <div id="content">
-        <div>
-            {% block content %}{% end %}
-        </div>
+    <h1 class="ui header" id="header">
+        Applause
+        <div class="sub header">Top 25 Medium Posts of the Day</div>
+    </h1>
+    <div class="list__container">
+        {% block content %}{% end %}
     </div>
 </body>
 

@@ -2,49 +2,36 @@
 {% block title %}Applause - {{ topic }}{% end %}
 {% block styles %}
     <style>
-        .posts__container {
-            align-items: center;
-            display: flex;
-            flex-direction: column;
-        }
-
-        .posts__header {
-            margin: 10px;
-            text-align: center;
-        }
-
-        .posts__title {
-            font-size: 1.5rem;
-            font-weight: 550;
-        }
-
-        .posts__last_updated {
-            font-size: 0.9rem;
-        }
-
         .posts__list {
-            margin: 0;
-        }
-
-        .posts__item {
-            margin: 0 0 10px 0;
+            margin: 10px;
         }
     </style>
 {% end %}
 {% block content %}
-    <div class="posts__container">
-        <div class="posts__header">
-            <div class="posts__title">{{ topic }}</div>
-            {% if last_updated %}
-                <div class="posts__last_updated">Last updated: {{ last_updated }}</div>
+    <div>
+        <div class="list__header">
+            <h2 class="ui header">
+                {{ topic }}
+                {% if last_updated %}
+                    <div class="sub header">Last updated: {{ last_updated }}</div>
+                {% end %}
+            </h2>
+        </div>
+        <div class="posts__list">
+            {% for post in posts %}
+                <div class="ui card">
+                    <div class="content">
+                        <div class="header">
+                            <a href="{{ post.url }}">{{ post.title }}</a>
+                        </div>
+                        <div>{{ post.creator }}</div>
+                    </div>
+                    <div class="extra content">
+                        <i class="thumbs up outline icon"></i>
+                        {{ post.total_clap_count }} Likes
+                    </div>
+                </div>
             {% end %}
         </div>
-        <ol class="posts__list">
-            {% for post in posts %}
-                <li class="posts__item">
-                    <a href="{{ post.url }}">{{ post.title }}</a> - {{ post.creator }} ({{ post.total_clap_count }})
-                </li>
-            {% end %}
-        </ol>
     </div>
 {% end %}

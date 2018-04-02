@@ -203,6 +203,13 @@ def main():
     )
     app.listen(int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080)))
 
+    if not env.is_production():
+        tornado.autoreload.start()
+        dirs = ['static', 'templates']
+        for d in dirs:
+            for fn in os.listdir(d):
+                tornado.autoreload.watch('{}/{}'.format(d, fn))
+
     loop.create_task(update_app_state(
         app_state, APP_STATE_FILENAME, SLEEP_TIME_IN_S
     ))
