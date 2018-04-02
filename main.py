@@ -55,6 +55,8 @@ async def update_app_state(app_state, filename, sleep_time_in_s=0):
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
 
+    timeout_urls = []
+
     while True:
         logging.info('Starting Medium scraper')
 
@@ -80,7 +82,9 @@ async def update_app_state(app_state, filename, sleep_time_in_s=0):
 
                 logging.info('Extracting post urls from {}'.format(topic))
                 post_urls = browser.extract_post_urls_from_current_page()
-                posts = await medium.fetch_posts(topic, post_urls, sleep_time_in_s)
+                posts, timeout_links = await medium.fetch_posts(topic, post_urls, sleep_time_in_s)
+
+                timeout_urls += timeout_links
 
                 app_state['top_posts'][topic]['list'] = sorted(
                     posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
@@ -104,6 +108,11 @@ async def update_app_state(app_state, filename, sleep_time_in_s=0):
             browser.close()
 
         logging.info('Finished scraping Medium posts')
+
+        if timeout_urls:
+            logging.debug('URLs that timed out:\n{}'.format(
+                '\n'.join(timeout_urls)
+            ))
 
         sleep_time_in_s = secs_until_midnight(datetime.now())
         logging.info(

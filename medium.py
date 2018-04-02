@@ -117,19 +117,28 @@ async def fetch_page(url):
 
 
 async def fetch_posts(topic, urls, sleep_time_in_s=0):
-    logging.info('Fetching posts from {}'.format(topic))
     posts = []
+    timeout_urls = []
+
+    logging.info('Fetching posts from {}'.format(topic))
+
     for url in urls:
         logging.debug('Visiting {}'.format(url))
-        page = await fetch_page(url)
-        post = extract_post(page)
-        posts.append(post)
-        logging.debug('Sleeping for {} second{}'.format(
-            sleep_time_in_s,
-            '' if sleep_time_in_s == 1 else 's'
-        ))
+
+        try:
+            page = await fetch_page(url)
+            post = extract_post(page)
+            posts.append(post)
+            logging.debug('Sleeping for {} second{}'.format(
+                sleep_time_in_s,
+                '' if sleep_time_in_s == 1 else 's'
+            ))
+        except asyncio.TimeoutError:
+            timeout_urls.append(url)
+
         await asyncio.sleep(sleep_time_in_s)
-    return posts
+
+    return posts, timeout_urls
 
 
 def topic_url(topic):
