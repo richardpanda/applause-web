@@ -119,6 +119,7 @@ async def fetch_page(url):
 async def fetch_posts(topic, urls, sleep_time_in_s=0):
     posts = []
     timeout_urls = []
+    json_decode_error_urls = []
 
     logging.info('Fetching posts from {}'.format(topic))
 
@@ -135,10 +136,12 @@ async def fetch_posts(topic, urls, sleep_time_in_s=0):
             ))
         except asyncio.TimeoutError:
             timeout_urls.append(url)
+        except json.JSONDecodeError:
+            decode_error_urls.append(url)
 
         await asyncio.sleep(sleep_time_in_s)
 
-    return posts, timeout_urls
+    return posts, timeout_urls, json_decode_error_urls
 
 
 def topic_url(topic):
