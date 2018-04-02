@@ -137,7 +137,7 @@ async def fetch_posts(topic, urls, sleep_time_in_s=0):
         except asyncio.TimeoutError:
             timeout_urls.append(url)
         except json.JSONDecodeError:
-            decode_error_urls.append(url)
+            json_decode_error_urls.append(url)
 
         await asyncio.sleep(sleep_time_in_s)
 
