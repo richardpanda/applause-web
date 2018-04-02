@@ -1,6 +1,7 @@
 from browser import Browser
 from datetime import datetime, timedelta
 from selenium import webdriver
+from selenium.common.exceptions import TimeoutException
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER
 
@@ -79,8 +80,15 @@ async def update_app_state(app_state, filename, sleep_time_in_s=0):
                 topic = medium.TOPICS[app_state['topic_index']]
                 await asyncio.sleep(0)
 
-                browser.navigate_to_url(medium.topic_url(topic))
-                await browser.scroll_to_bottom_n_times(NUM_PAGES)
+                try:
+                    browser.navigate_to_url(medium.topic_url(topic))
+                    await browser.scroll_to_bottom_n_times(NUM_PAGES)
+                except TimeoutException:
+                    logging.debug(
+                        'Unable to scroll down {} times for {}'.format(
+                            NUM_PAGES, topic
+                        )
+                    )
 
                 logging.info('Extracting post urls from {}'.format(topic))
                 post_urls = browser.extract_post_urls_from_current_page()
