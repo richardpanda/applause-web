@@ -11,6 +11,7 @@ selenium = "*"
 "beautifulsoup4" = "*"
 aiohttp = "*"
 tornado = "*"
+requests = "*"
 
 
 [dev-packages]

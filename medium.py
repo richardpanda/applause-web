@@ -77,6 +77,7 @@ else:
     ]
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
+Topic = namedtuple('Topic', 'id name')
 
 
 def extract_post(html_doc):
@@ -142,6 +143,16 @@ async def fetch_posts(topic, urls, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)
 
     return posts, timeout_urls, json_decode_error_urls
+
+
+def fetch_topics():
+    resp = requests.get('https://medium.com/topics')
+    data = re.findall(
+        '<script>// <!\[CDATA\[\nwindow\["obvInit"]\((.*)\)', resp.text)
+    data_json = json.loads(data[0])
+    topics = [Topic(topic_id, topic_json['name']) for topic_id,
+              topic_json in data_json['references']['Topic'].items()]
+    return sorted(topics, key=lambda topic: topic.name)
 
 
 def topic_url(topic):
