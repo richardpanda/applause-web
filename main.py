@@ -95,10 +95,11 @@ async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
 
                 logging.debug(f'Sending GET request to {url}')
 
+                stream = await medium.fetch_stream(url, cookie_str)
+
                 if 'Post' not in stream['payload']['references']:
                     break
 
-                stream = await medium.fetch_stream(url, cookie_str)
                 posts += medium.extract_posts_from_stream(stream)
                 to = stream['payload']['paging']['next']['to']
 
