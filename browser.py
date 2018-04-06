@@ -1,11 +1,11 @@
-from expected_conditions import element_appears_n_times, url_is
-from selenium.webdriver.common.by import By
-from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.support.ui import WebDriverWait
-
 import asyncio
 import logging
 import medium
+
+from expected_conditions import url_is
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support import expected_conditions as EC
+from selenium.webdriver.support.ui import WebDriverWait
 
 
 class Browser():
@@ -13,39 +13,15 @@ class Browser():
         self.driver = driver
         self.wait = WebDriverWait(self.driver, 10)
 
+    def build_cookie_str(self):
+        return ';'.join([f"{c['name']}={c['value']}" for c in self.driver.get_cookies()])
+
     def close(self):
         self.driver.close()
-
-    def extract_post_urls_from_current_page(self):
-        a_tags = self.driver.find_elements_by_tag_name('a')
-        return set([a.get_property('href') for a in a_tags if '?source=topic_page' in a.get_property('href')])
 
     def navigate_to_url(self, url):
         logging.info('Navigating to {}'.format(url))
         self.driver.get(url)
-
-    async def scroll_to_bottom_n_times(self, num_scrolls, sleep_time_in_s=0):
-        logging.info('Scrolling to bottom {} times'.format(num_scrolls))
-        INITIAL_NUM_STREAM_ITEMS = 3
-        num_stream_items = INITIAL_NUM_STREAM_ITEMS
-        for _ in range(num_scrolls):
-            await asyncio.sleep(sleep_time_in_s)
-            logging.info(
-                'Waiting for number of stream items to be {}'.format(
-                    num_stream_items)
-            )
-            self.wait.until(
-                element_appears_n_times(
-                    (By.CLASS_NAME, 'js-streamItem'), num_stream_items)
-            )
-            logging.info('Scrolling to bottom')
-            self.driver.execute_script(
-                'window.scrollTo(0, document.body.scrollHeight);'
-            )
-            num_stream_items += 1
-            logging.info('Scrolled to bottom {} times'.format(
-                num_stream_items - INITIAL_NUM_STREAM_ITEMS)
-            )
 
     async def sign_in_to_facebook(self, username, password, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)

@@ -1,148 +1,41 @@
+import json
+import re
+import requests
+
 from bs4 import BeautifulSoup
 from collections import namedtuple
-
-import aiohttp
-import async_timeout
-import asyncio
-import env
-import json
-import logging
-import re
+from tornado.httpclient import AsyncHTTPClient
 
 BASE_URL = 'https://medium.com/'
 SIGN_IN_URL = '{}m/signin'.format(BASE_URL)
-
-if env.is_production():
-    TOPICS = [
-        'art',
-        'artificial-intelligence',
-        'basic-income',
-        'business',
-        'comics',
-        'creativity',
-        'cryptocurrency',
-        'culture',
-        'cybersecurity',
-        'data-science',
-        'digital-design',
-        'economy',
-        'education',
-        'entrepreneurship',
-        'environment',
-        'equality',
-        'family',
-        'film',
-        'food',
-        'freelancing',
-        'future',
-        'gun-control',
-        'health',
-        'history',
-        'humor',
-        'javascript',
-        'lit',
-        'marketing',
-        'math',
-        'media',
-        'mental-health',
-        'music',
-        'neuroscience',
-        'personal-finance',
-        'philosophy',
-        'photography',
-        'politics',
-        'productivity',
-        'programming',
-        'psychology',
-        'relationships',
-        'science',
-        'self',
-        'sexuality',
-        'social-media',
-        'software-engineering',
-        'space',
-        'spirituality',
-        'sports',
-        'technology',
-        'travel',
-        'true-crime',
-        'wellness',
-        'work',
-        'world'
-    ]
-else:
-    TOPICS = [
-        'programming',
-        'software-engineering'
-    ]
 
 Post = namedtuple('Post', 'title creator url total_clap_count')
 Topic = namedtuple('Topic', 'id name')
 
 
-def extract_post(html_doc):
-    soup = BeautifulSoup(html_doc, 'html.parser')
-
-    post_info_str = ''
-    for s in soup.find_all('script'):
-        text = s.get_text()
-        if text.startswith('{"@context":"'):
-            post_info_str = text
-            break
-
-    post_info_json = json.loads(post_info_str)
-
-    script_str = ''
-    for s in soup.find_all('script'):
-        text = s.get_text()
-        if text.startswith('// <![CDATA[\nwindow["obvInit"]('):
-            script_str = text
-            break
-
-    total_clap_count_regex = r'"totalClapCount":(\d+),"'
-    match = re.search(total_clap_count_regex, script_str)
-
-    title = post_info_json['name']
-    creator = post_info_json['author']['name']
-    url = soup.find('meta', {'property': 'og:url'})['content']
-    total_clap_count = int(match.group(1))
-
-    return Post(title, creator, url, total_clap_count)
-
-
-async def fetch_page(url):
-    async with aiohttp.ClientSession() as session:
-        async with async_timeout.timeout(10):
-            async with session.get(url) as response:
-                return await response.text()
-
-
-async def fetch_posts(topic, urls, sleep_time_in_s=0):
+def extract_posts_from_stream(stream):
     posts = []
-    timeout_urls = []
-    json_decode_error_urls = []
+    for post_id, post in stream['payload']['references']['Post'].items():
+        title = post['title']
+        creator_name = stream['payload']['references']['User'][post['creatorId']]['name']
+        user_name = creator_name.replace(' ', '').lower()
+        unique_slug = post['uniqueSlug']
+        url = f'https://medium.com/@{user_name}/{unique_slug}'
+        total_clap_count = post['virtuals']['totalClapCount']
+        posts.append(Post(title, creator_name, url, total_clap_count))
+    return posts
 
-    logging.info('Fetching posts from {}'.format(topic))
 
-    for url in urls:
-        logging.debug('Visiting {}'.format(url))
+async def fetch_page(url, cookie_str):
+    http_client = AsyncHTTPClient()
+    response = await http_client.fetch(url, headers={'Cookie': cookie_str})
+    return response.body
 
-        try:
-            page = await fetch_page(url)
-            post = extract_post(page)
-            posts.append(post)
-            logging.debug('Sleeping for {} second{}'.format(
-                sleep_time_in_s,
-                '' if sleep_time_in_s == 1 else 's'
-            ))
-        except asyncio.TimeoutError:
-            timeout_urls.append(url)
-        except json.JSONDecodeError:
-            json_decode_error_urls.append(url)
 
-        await asyncio.sleep(sleep_time_in_s)
-
-    return posts, timeout_urls, json_decode_error_urls
+async def fetch_stream(url, cookies):
+    resp_str = await fetch_page(url, cookies)
+    # Remove '])}while(1);</x>' from beginning of string
+    return json.loads(resp_str[16:])
 
 
 def fetch_topics():
@@ -150,8 +43,8 @@ def fetch_topics():
     data = re.findall(
         '<script>// <!\[CDATA\[\nwindow\["obvInit"]\((.*)\)', resp.text)
     data_json = json.loads(data[0])
-    topics = [Topic(topic_id, topic_json['name']) for topic_id,
-              topic_json in data_json['references']['Topic'].items()]
+    topics = [Topic(topic_id, topic_json['name'].replace(' ', '-').lower())
+              for topic_id, topic_json in data_json['references']['Topic'].items()]
     return sorted(topics, key=lambda topic: topic.name)
 
 

@@ -1,23 +1,23 @@
-from browser import Browser
-from datetime import datetime, timedelta
-from selenium import webdriver
-from selenium.common.exceptions import TimeoutException
-from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.remote.remote_connection import LOGGER
-
 import asyncio
 import env
 import json
 import logging
 import medium
+import time
 import tornado.autoreload
 import tornado.web
 import os
 
+from browser import Browser
+from datetime import datetime, timedelta
+from selenium import webdriver
+from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.remote.remote_connection import LOGGER
+
 LAST_UPDATED_FORMAT = '%Y-%m-%d %H:%M:%S'
 
 
-def load_app_state_from_file(app_state, filename, topics):
+def load_app_state_from_file(app_state, filename, topic_names):
     try:
         if os.stat(filename).st_size == 0:
             logging.info('{} is empty.'.format(filename))
@@ -35,7 +35,7 @@ def load_app_state_from_file(app_state, filename, topics):
 
             app_state['topic_index'] = app_state_json['topic_index']
 
-            last_updated_topic = topics[
+            last_updated_topic = topic_names[
                 (app_state['topic_index']-1)
             ]
             app_state['last_updated'] = app_state['top_posts'][last_updated_topic]['last_updated']
@@ -50,21 +50,18 @@ def secs_until_midnight(dt_now):
     return int((dt_midnight - dt_now).total_seconds())
 
 
-async def update_app_state(app_state, filename, sleep_time_in_s=0):
+async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
     MAX_POSTS = 25
-    NUM_PAGES = 5 if env.is_production() else 1
+    NUM_PAGES = 5 if env.is_production() else 2
 
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
-
-    timeout_urls = []
-    json_decode_error_urls = []
 
     while True:
         logging.info('Starting Medium scraper')
 
         try:
-            await asyncio.sleep(0)
+            await asyncio.sleep(sleep_time_in_s)
 
             chrome_options = Options()
             chrome_options.add_argument('--headless')
@@ -72,71 +69,56 @@ async def update_app_state(app_state, filename, sleep_time_in_s=0):
             driver = webdriver.Chrome(chrome_options=chrome_options)
             browser = Browser(driver)
 
-            await asyncio.sleep(0)
-            await browser.sign_in_to_medium_with_facebook(username, password)
+            await asyncio.sleep(sleep_time_in_s)
+            await browser.sign_in_to_medium_with_facebook(username, password, sleep_time_in_s)
 
-            num_topics = len(medium.TOPICS)
-            for _ in range(num_topics):
-                topic = medium.TOPICS[app_state['topic_index']]
-                await asyncio.sleep(0)
-
-                try:
-                    browser.navigate_to_url(medium.topic_url(topic))
-                    await browser.scroll_to_bottom_n_times(NUM_PAGES)
-                except TimeoutException:
-                    logging.debug(
-                        'Unable to scroll down {} times for {}'.format(
-                            NUM_PAGES, topic
-                        )
-                    )
-
-                logging.info('Extracting post urls from {}'.format(topic))
-                post_urls = browser.extract_post_urls_from_current_page()
-                posts, timeout_links, json_decode_error_links = await medium.fetch_posts(topic, post_urls, sleep_time_in_s)
-
-                timeout_urls += timeout_links
-                json_decode_error_urls += json_decode_error_links
-
-                app_state['top_posts'][topic]['list'] = sorted(
-                    posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-                app_state['top_posts'][topic]['last_updated'] = datetime.now().strftime(
-                    LAST_UPDATED_FORMAT
-                )
-
-                app_state['last_updated'] = app_state['top_posts'][topic]['last_updated']
-                app_state['topic_index'] += 1
-                app_state['topic_index'] %= num_topics
-
-                logging.info(
-                    'Finished fetching top posts from {}'.format(topic)
-                )
-
-                logging.info('Saving top posts to {}'.format(filename))
-                with open(filename, 'w') as f:
-                    json.dump(app_state, f)
+            cookie_str = browser.build_cookie_str()
         finally:
             logging.info('Closing browser')
             browser.close()
 
-        logging.info('Finished scraping Medium posts')
+        for topic in topics:
+            logging.info(f'Fetching posts from {topic.name}')
 
-        if timeout_urls:
-            logging.debug('URLs that timed out:\n{}'.format(
-                '\n'.join(timeout_urls)
-            ))
+            base_url = f'https://medium.com/_/api/topics/{topic.id}/stream?limit=25'
+            to = ''
+            posts = []
 
-        if json_decode_error_urls:
-            logging.debug('URLs that could not be JSON decoded:\n{}'.format(
-                '\n'.join(json_decode_error_urls)
-            ))
+            for _ in range(NUM_PAGES):
+                url = base_url
+                if to:
+                    url = f'{url}&to={to}'
 
-        sleep_time_in_s = secs_until_midnight(datetime.now())
-        logging.info(
-            'Waking up Medium scraper in {} seconds'.format(
-                sleep_time_in_s
+                logging.debug(f'Sending GET request to {url}')
+
+                stream = await medium.fetch_stream(url, cookie_str)
+                posts += medium.extract_posts_from_stream(stream)
+                to = stream['payload']['paging']['next']['to']
+
+                sleep_time_str = '1 second' if sleep_time_in_s == 1 else f'{sleep_time_in_s} seconds'
+                logging.debug(f'Sleeping for {sleep_time_str}')
+                await asyncio.sleep(sleep_time_in_s)
+
+            logging.info(f'Finished fetching posts from {topic.name}')
+            logging.info('Updating app state')
+
+            app_state['top_posts'][topic.name]['list'] = sorted(
+                posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
+            app_state['top_posts'][topic.name]['last_updated'] = datetime.now().strftime(
+                LAST_UPDATED_FORMAT
             )
-        )
-        await asyncio.sleep(sleep_time_in_s)
+
+            app_state['last_updated'] = app_state['top_posts'][topic.name]['last_updated']
+            app_state['topic_index'] += 1
+            app_state['topic_index'] %= len(topics)
+
+            logging.info(f'Saving app state to {filename}')
+            with open(filename, 'w') as f:
+                json.dump(app_state, f)
+
+        midnight_secs = secs_until_midnight(datetime.now())
+        logging.info(f'Waking up Medium scraper in {midnight_secs} seconds')
+        await asyncio.sleep(midnight_secs)
 
 
 class IndexHandler(tornado.web.RequestHandler):
@@ -177,22 +159,28 @@ def main():
         level=logging.DEBUG
     )
 
+    topics = medium.fetch_topics()
+    if not env.is_production():
+        topics = [topic
+                  for topic in topics if topic.name in 'programming software-engineering']
+
     top_posts = {
-        topic: dict(list=[], last_updated='')
-        for topic in medium.TOPICS
+        topic.name: dict(list=[], last_updated='')
+        for topic in topics
     }
     app_state = dict(
         last_updated='',
         top_posts=top_posts,
         topic_index=0
     )
-    load_app_state_from_file(app_state, APP_STATE_FILENAME, medium.TOPICS)
+    topic_names = [topic.name for topic in topics]
+    load_app_state_from_file(app_state, APP_STATE_FILENAME, topic_names)
 
     loop = asyncio.get_event_loop()
 
     handlers = [
         (r'/', IndexHandler,
-            {'app_state': app_state, 'topics': medium.TOPICS}),
+            {'app_state': app_state, 'topics': topic_names}),
         (r'/topic/([\w-]+)', TopicHandler,
             {'top_posts': app_state['top_posts']})
     ]
@@ -211,7 +199,7 @@ def main():
                 tornado.autoreload.watch('{}/{}'.format(d, fn))
 
     loop.create_task(update_app_state(
-        app_state, APP_STATE_FILENAME, SLEEP_TIME_IN_S
+        app_state, topics, APP_STATE_FILENAME, SLEEP_TIME_IN_S
     ))
     logging.info('Starting web server and scraper')
     loop.run_forever()
