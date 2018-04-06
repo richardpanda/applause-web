@@ -85,19 +85,22 @@ async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
             posts = []
 
             for _ in range(NUM_PAGES):
+                sleep_time_str = '1 second' if sleep_time_in_s == 1 else f'{sleep_time_in_s} seconds'
+                logging.debug(f'Sleeping for {sleep_time_str}')
+                await asyncio.sleep(sleep_time_in_s)
+
                 url = base_url
                 if to:
                     url = f'{url}&to={to}'
 
                 logging.debug(f'Sending GET request to {url}')
 
+                if 'Post' not in stream['payload']['references']:
+                    break
+
                 stream = await medium.fetch_stream(url, cookie_str)
                 posts += medium.extract_posts_from_stream(stream)
                 to = stream['payload']['paging']['next']['to']
-
-                sleep_time_str = '1 second' if sleep_time_in_s == 1 else f'{sleep_time_in_s} seconds'
-                logging.debug(f'Sleeping for {sleep_time_str}')
-                await asyncio.sleep(sleep_time_in_s)
 
             logging.info(f'Finished fetching posts from {topic.name}')
             logging.info('Updating app state')
