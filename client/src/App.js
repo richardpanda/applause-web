@@ -2,6 +2,7 @@ import React, { Component } from "react";
 import { Grid } from "semantic-ui-react";
 
 import Header from "./Header";
+import PostList from "./PostList";
 import TopicDropdown from "./TopicDropdown";
 
 import "./style.css";
@@ -16,14 +17,17 @@ class App extends Component {
   }
 
   render() {
+    const { topic } = this.state;
+
     return (
-      <Grid centered columns={2} id="grid-container">
-        <Grid.Row textAlign="center" id="grid-header">
+      <Grid id="grid-container">
+        <Grid.Row centered id="grid-header">
           <Header />
         </Grid.Row>
         <Grid.Row centered>
           <TopicDropdown handleChange={this.handleDropdownChange.bind(this)} />
         </Grid.Row>
+        <PostList topic={topic} />
       </Grid>
     );
   }
