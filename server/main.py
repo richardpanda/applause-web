@@ -153,7 +153,7 @@ def main():
         (r'/api/topics', TopicsHandler, {'topics': topic_names})
     ]
     app = tornado.web.Application(handlers=handlers)
-    app.listen(int(os.getenv('APPLAUSE_WEB__SERVER_PORT', 8080)))
+    app.listen(8080)
 
     if not env.is_production():
         tornado.autoreload.start()
