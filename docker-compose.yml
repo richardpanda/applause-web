@@ -7,7 +7,7 @@ services:
       - APPLAUSE_WEB__FACEBOOK_USERNAME=""
       - APPLAUSE_WEB__FACEBOOK_PASSWORD=""
   app:
-    build: "./client"
+    build: "./app"
   web:
     build: ./nginx
     ports:
