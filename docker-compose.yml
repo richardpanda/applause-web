@@ -1,7 +1,7 @@
 version: '3'
 services:
   api:
-    build: ./server
+    build: ./api
     environment:
       - APPLAUSE_WEB__ENV="production"
       - APPLAUSE_WEB__FACEBOOK_USERNAME=""
