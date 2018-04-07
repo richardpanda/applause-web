@@ -1,0 +1,17 @@
+version: '3'
+services:
+  api:
+    build: ./server
+    environment:
+      - APPLAUSE_WEB__ENV="production"
+      - APPLAUSE_WEB__FACEBOOK_USERNAME=""
+      - APPLAUSE_WEB__FACEBOOK_PASSWORD=""
+  app:
+    build: "./client"
+  web:
+    build: ./nginx
+    ports:
+      - "80:80"
+    depends_on:
+      - api
+      - app
