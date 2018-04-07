@@ -14,34 +14,22 @@ from selenium import webdriver
 from selenium.webdriver.chrome.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER
 
-LAST_UPDATED_FORMAT = '%Y-%m-%d %H:%M:%S'
 
-
-def load_app_state_from_file(app_state, filename, topic_names):
+def load_top_posts_from_file(top_posts, filename):
     try:
         if os.stat(filename).st_size == 0:
             logging.info('{} is empty.'.format(filename))
             return
 
         with open(filename, 'r') as f:
-            logging.info('Loading top posts from {}'.format(filename))
-            app_state_json = json.load(f)
+            logging.info(f'Loading top posts from {filename}')
+            top_posts_json = json.load(f)
 
-            for topic, top_posts_obj in app_state_json['top_posts'].items():
-                app_state['top_posts'][topic]['list'] = [
-                    medium.Post(*post) for post in top_posts_obj['list']
-                ]
-                app_state['top_posts'][topic]['last_updated'] = top_posts_obj['last_updated']
-
-            app_state['topic_index'] = app_state_json['topic_index']
-
-            last_updated_topic = topic_names[
-                (app_state['topic_index']-1)
-            ]
-            app_state['last_updated'] = app_state['top_posts'][last_updated_topic]['last_updated']
+            for topic, posts in top_posts_json.items():
+                top_posts[topic] = [medium.Post(*post) for post in posts]
 
     except (IOError, OSError):
-        logging.info('{} does not exist'.format(filename))
+        logging.info(f'{filename} does not exist')
 
 
 def secs_until_midnight(dt_now):
@@ -50,7 +38,7 @@ def secs_until_midnight(dt_now):
     return int((dt_midnight - dt_now).total_seconds())
 
 
-async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
+async def update_top_posts(top_posts, topics, filename, sleep_time_in_s=0):
     MAX_POSTS = 25
     NUM_PAGES = 5 if env.is_production() else 2
 
@@ -104,21 +92,13 @@ async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
                 to = stream['payload']['paging']['next']['to']
 
             logging.info(f'Finished fetching posts from {topic.name}')
-            logging.info('Updating app state')
 
-            app_state['top_posts'][topic.name]['list'] = sorted(
+            top_posts[topic.name] = sorted(
                 posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-            app_state['top_posts'][topic.name]['last_updated'] = datetime.now().strftime(
-                LAST_UPDATED_FORMAT
-            )
 
-            app_state['last_updated'] = app_state['top_posts'][topic.name]['last_updated']
-            app_state['topic_index'] += 1
-            app_state['topic_index'] %= len(topics)
-
-            logging.info(f'Saving app state to {filename}')
+            logging.info(f'Saving top posts to {filename}')
             with open(filename, 'w') as f:
-                json.dump(app_state, f)
+                json.dump(top_posts, f)
 
         midnight_secs = secs_until_midnight(datetime.now())
         logging.info(f'Waking up Medium scraper in {midnight_secs} seconds')
@@ -126,11 +106,11 @@ async def update_app_state(app_state, topics, filename, sleep_time_in_s=0):
 
 
 class PostsHandler(tornado.web.RequestHandler):
-    def initialize(self, posts):
-        self.posts = posts
+    def initialize(self, top_posts):
+        self.top_posts = top_posts
 
     def get(self, topic):
-        posts = [post._asdict() for post in self.posts[topic]['list']]
+        posts = [post._asdict() for post in self.top_posts[topic]]
         self.write({'posts': posts})
         self.flush()
 
@@ -145,7 +125,7 @@ class TopicsHandler(tornado.web.RequestHandler):
 
 
 def main():
-    APP_STATE_FILENAME = 'app_state.txt'
+    TOP_POSTS_FILENAME = 'top_posts.txt'
     LOGGING_FILENAME = 'applause.log'
     SLEEP_TIME_IN_S = 2 if env.is_production() else 1
 
@@ -161,23 +141,15 @@ def main():
         topics = [topic for topic in topics
                   if topic.name in 'programming software-engineering']
 
-    top_posts = {
-        topic.name: dict(list=[], last_updated='')
-        for topic in topics
-    }
-    app_state = dict(
-        last_updated='',
-        top_posts=top_posts,
-        topic_index=0
-    )
+    top_posts = {topic.name: [] for topic in topics}
     topic_names = [topic.name for topic in topics]
-    load_app_state_from_file(app_state, APP_STATE_FILENAME, topic_names)
+    load_top_posts_from_file(top_posts, TOP_POSTS_FILENAME)
 
     loop = asyncio.get_event_loop()
 
     handlers = [
         (r'/api/topic/([\w-]+)/posts', PostsHandler,
-         {'posts': app_state['top_posts']}),
+         {'top_posts': top_posts}),
         (r'/api/topics', TopicsHandler, {'topics': topic_names})
     ]
     app = tornado.web.Application(handlers=handlers)
@@ -186,8 +158,8 @@ def main():
     if not env.is_production():
         tornado.autoreload.start()
 
-    loop.create_task(update_app_state(
-        app_state, topics, APP_STATE_FILENAME, SLEEP_TIME_IN_S
+    loop.create_task(update_top_posts(
+        top_posts, topics, TOP_POSTS_FILENAME, SLEEP_TIME_IN_S
     ))
     logging.info('Starting web server and scraper')
     loop.run_forever()
