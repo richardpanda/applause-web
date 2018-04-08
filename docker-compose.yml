@@ -2,10 +2,6 @@ version: '3'
 services:
   api:
     build: ./api
-    environment:
-      - APPLAUSE_WEB__ENV="production"
-      - APPLAUSE_WEB__FACEBOOK_USERNAME=""
-      - APPLAUSE_WEB__FACEBOOK_PASSWORD=""
   app:
     build: "./app"
   web:
