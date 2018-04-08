@@ -1,0 +1,7 @@
+__pycache__
+.env
+.env.example
+applause.log
+Pipfile
+Pipfile.lock
+top_posts.txt
