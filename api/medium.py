@@ -7,9 +7,10 @@ from collections import namedtuple
 from tornado.httpclient import AsyncHTTPClient
 
 BASE_URL = 'https://medium.com/'
+BASE_IMG_URL = 'https://cdn-images-1.medium.com/max/800/'
 SIGN_IN_URL = '{}m/signin'.format(BASE_URL)
 
-Post = namedtuple('Post', 'title creator url total_clap_count')
+Post = namedtuple('Post', 'title creator url total_clap_count img_url')
 Topic = namedtuple('Topic', 'id name')
 
 
@@ -22,7 +23,9 @@ def extract_posts_from_stream(stream):
         unique_slug = post['uniqueSlug']
         url = f'https://medium.com/@{user_name}/{unique_slug}'
         total_clap_count = post['virtuals']['totalClapCount']
-        posts.append(Post(title, creator_name, url, total_clap_count))
+        img_id = post['virtuals']['previewImage']['imageId']
+        img_url = f'{BASE_IMG_URL}{img_id}'
+        posts.append(Post(title, creator_name, url, total_clap_count, img_url))
     return posts
 
 

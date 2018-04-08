@@ -1,5 +1,5 @@
 import React, { Component } from "react";
-import { Card, Grid, Icon } from "semantic-ui-react";
+import { Card, Grid, Icon, Image } from "semantic-ui-react";
 
 import "./style.css";
 
@@ -22,6 +22,7 @@ class PostList extends Component {
         {this.state.posts.map(post => (
           <Grid.Row id="post-row" key={post.title}>
             <Card>
+              <Image src={post.img_url} href={post.url} />
               <Card.Content textAlign="left">
                 <a className="post-title" href={post.url}>
                   {post.title}
