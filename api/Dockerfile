@@ -1,13 +1,15 @@
-FROM python:3.6-jessie
+FROM python:3.6-alpine3.7
 
-RUN apt-get update
+RUN echo "@edge http://nl.alpinelinux.org/alpine/edge/main" >> /etc/apk/repositories
+RUN echo "@testing http://nl.alpinelinux.org/alpine/edge/testing" >> /etc/apk/repositories
+RUN apk update
+RUN apk add --update openssl
 
-RUN wget -O /tmp/google-chrome.deb https://dl.google.com/linux/direct/google-chrome-stable_current_amd64.deb
-RUN dpkg -i /tmp/google-chrome.deb; apt-get -fy install
+RUN wget -O /tmp/geckodriver.tar.gz https://github.com/mozilla/geckodriver/releases/download/v0.20.0/geckodriver-v0.20.0-linux64.tar.gz
+RUN tar -xvzf /tmp/geckodriver.tar.gz -C /usr/local/bin
 
-RUN apt-get install unzip
-RUN wget -O /tmp/chromedriver.zip https://chromedriver.storage.googleapis.com/2.37/chromedriver_linux64.zip
-RUN unzip /tmp/chromedriver.zip -d /usr/local/bin
+RUN apk add icu-libs@edge
+RUN apk add firefox@testing
 
 WORKDIR /usr/src/app
 

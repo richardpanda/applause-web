@@ -11,7 +11,7 @@ import os
 from browser import Browser
 from datetime import datetime, timedelta
 from selenium import webdriver
-from selenium.webdriver.chrome.options import Options
+from selenium.webdriver.firefox.options import Options
 from selenium.webdriver.remote.remote_connection import LOGGER
 
 
@@ -48,13 +48,14 @@ async def update_top_posts(top_posts, topics, filename, sleep_time_in_s=0):
     while True:
         logging.info('Starting Medium scraper')
 
-        try:
-            await asyncio.sleep(sleep_time_in_s)
+        await asyncio.sleep(sleep_time_in_s)
 
-            chrome_options = Options()
-            chrome_options.add_argument('--headless')
-            chrome_options.add_argument('--no-sandbox')
-            driver = webdriver.Chrome(chrome_options=chrome_options)
+        firefox_options = Options()
+        firefox_options.add_argument('--headless')
+        firefox_options.add_argument('--no-sandbox')
+        driver = webdriver.Firefox(firefox_options=firefox_options)
+
+        try:
             browser = Browser(driver)
 
             await asyncio.sleep(sleep_time_in_s)
