@@ -1,8 +1,8 @@
 import asyncio
+import env
 import logging
 import medium
 
-from expected_conditions import url_is
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.support.ui import WebDriverWait
@@ -22,6 +22,9 @@ class Browser():
     def navigate_to_url(self, url):
         logging.info('Navigating to {}'.format(url))
         self.driver.get(url)
+
+    def refresh(self):
+        self.driver.get(self.driver.current_url)
 
     async def sign_in_to_facebook(self, username, password, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)
@@ -63,5 +66,11 @@ class Browser():
         await self.sign_in_to_facebook(username, password, sleep_time_in_s)
 
         await asyncio.sleep(sleep_time_in_s)
+
+        if env.is_production():
+            logging.info('Reloading page')
+            self.refresh()
+            await asyncio.sleep(sleep_time_in_s)
+
         logging.info('Waiting for redirect to Medium')
-        self.wait.until(url_is(medium.BASE_URL))
+        self.wait.until(EC.url_to_be(medium.BASE_URL))
