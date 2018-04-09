@@ -9,7 +9,7 @@ services:
   web:
     build: ./nginx
     ports:
-      - "80:80"
+      - "443:443"
     volumes:
       - /etc/letsencrypt/live/applause.pw/fullchain.pem:/etc/letsencrypt/live/applause.pw/fullchain.pem
       - /etc/letsencrypt/live/applause.pw/privkey.pem:/etc/letsencrypt/live/applause.pw/privkey.pem
