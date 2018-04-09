@@ -33,6 +33,7 @@ class TopicDropdown extends Component {
         selection
         options={options}
         onChange={this.props.handleChange}
+        selectOnNavigation={false}
       />
     );
   }
