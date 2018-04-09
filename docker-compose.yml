@@ -2,6 +2,8 @@ version: '3'
 services:
   api:
     build: ./api
+    volumes:
+      - ./api:/usr/src/app
   app:
     build: "./app"
   web:
