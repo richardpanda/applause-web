@@ -10,6 +10,9 @@ services:
     build: ./nginx
     ports:
       - "80:80"
+    volumes:
+      - /etc/letsencrypt/live/applause.pw/fullchain.pem:/etc/letsencrypt/live/applause.pw/fullchain.pem
+      - /etc/letsencrypt/live/applause.pw/privkey.pem:/etc/letsencrypt/live/applause.pw/privkey.pem
     depends_on:
       - api
       - app
