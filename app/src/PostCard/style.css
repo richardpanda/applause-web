@@ -1,0 +1,34 @@
+.post-creator {
+  opacity: 0.6;
+}
+
+.post-image-container {
+  height: 50%;
+}
+
+.post-likes {
+  color: black;
+  opacity: 0.7;
+}
+
+.post-title {
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  display: -webkit-box;
+  font-size: 1.2em;
+  font-weight: 510;
+  line-height: 1.2em;
+  max-height: 2.4em;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+#post-card {
+  height: 300px;
+}
+
+#post-image {
+  height: 100%;
+  margin: 0px;
+  width: 100%;
+}

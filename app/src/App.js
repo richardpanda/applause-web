@@ -2,7 +2,7 @@ import React, { Component } from "react";
 import { Grid } from "semantic-ui-react";
 
 import Header from "./Header";
-import PostList from "./PostList";
+import PostGrid from "./PostGrid";
 import TopicDropdown from "./TopicDropdown";
 
 import "./style.css";
@@ -27,7 +27,7 @@ class App extends Component {
         <Grid.Row centered>
           <TopicDropdown handleChange={this.handleDropdownChange.bind(this)} />
         </Grid.Row>
-        <PostList topic={topic} />
+        <PostGrid topic={topic} />
       </Grid>
     );
   }
