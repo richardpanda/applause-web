@@ -9,11 +9,11 @@ class PostCard extends Component {
 
     return (
       <Card id="post-card">
-        <a href={post.url} className="post-image-container">
+        <a className="post-image-container" href={post.url} target="_blank">
           <Image src={post.img_url} id="post-image" centered />
         </a>
         <Card.Content textAlign="left">
-          <a className="post-title" href={post.url}>
+          <a className="post-title" target="_blank" href={post.url}>
             {post.title}
           </a>
           <div className="post-creator">{post.creator}</div>
