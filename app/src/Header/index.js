@@ -9,7 +9,7 @@ export default () => (
       Applause
     </Header>
     <Header size="medium" id="subtitle">
-      Top 25 Medium Posts by Topic
+      Top 20 Medium Posts by Topic
     </Header>
   </div>
 );

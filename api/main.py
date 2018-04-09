@@ -39,7 +39,7 @@ def secs_until_midnight(dt_now):
 
 
 async def update_top_posts(top_posts, topics, filename, sleep_time_in_s=0):
-    MAX_POSTS = 25
+    MAX_POSTS = 20
     NUM_PAGES = 5 if env.is_production() else 2
 
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
