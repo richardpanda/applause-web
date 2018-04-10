@@ -111,9 +111,13 @@ class PostsHandler(tornado.web.RequestHandler):
         self.top_posts = top_posts
 
     def get(self, topic):
+        if topic not in self.top_posts:
+            self.set_status(404)
+            self.write({'message': 'Topic does not exist.'})
+            return
+
         posts = [post._asdict() for post in self.top_posts[topic]]
         self.write({'posts': posts})
-        self.flush()
 
 
 class TopicsHandler(tornado.web.RequestHandler):
