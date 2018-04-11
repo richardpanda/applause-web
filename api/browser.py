@@ -26,27 +26,27 @@ class Browser():
     def refresh(self):
         self.driver.get(self.driver.current_url)
 
-    async def sign_in_to_facebook(self, username, password, sleep_time_in_s=0):
+    async def sign_in_to_facebook(self, fb_account, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)
         logging.info('Waiting for username input to be present')
         email_input = self.wait.until(
             EC.presence_of_element_located((By.ID, 'email'))
         )
         logging.info('Entering Facebook username')
-        email_input.send_keys(username)
+        email_input.send_keys(fb_account.username)
 
         await asyncio.sleep(sleep_time_in_s)
         password_input = self.driver.find_element_by_id('pass')
 
         logging.info('Entering Facebook password')
-        password_input.send_keys(password)
+        password_input.send_keys(fb_account.password)
 
         await asyncio.sleep(sleep_time_in_s)
         login_button = self.driver.find_element_by_id('loginbutton')
         logging.info('Clicking on login button')
         self.driver.execute_script("arguments[0].click();", login_button)
 
-    async def sign_in_to_medium_with_facebook(self, username, password, sleep_time_in_s=0):
+    async def sign_in_to_medium_with_facebook(self, fb_account, sleep_time_in_s=0):
         await asyncio.sleep(sleep_time_in_s)
         self.navigate_to_url(medium.SIGN_IN_URL)
 
@@ -63,7 +63,7 @@ class Browser():
         facebook_signin_button.click()
 
         await asyncio.sleep(sleep_time_in_s)
-        await self.sign_in_to_facebook(username, password, sleep_time_in_s)
+        await self.sign_in_to_facebook(fb_account, sleep_time_in_s)
 
         await asyncio.sleep(sleep_time_in_s)
 

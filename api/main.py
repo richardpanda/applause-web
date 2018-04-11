@@ -1,5 +1,6 @@
 import asyncio
 import env
+import facebook
 import json
 import logging
 import medium
@@ -38,12 +39,9 @@ def secs_until_midnight(dt_now):
     return int((dt_midnight - dt_now).total_seconds())
 
 
-async def update_top_posts(top_posts, topics, filename, sleep_time_in_s=0):
+async def update_top_posts(fb_account, top_posts, topics, filename, sleep_time_in_s=0):
     MAX_POSTS = 20
     NUM_PAGES = 5 if env.is_production() else 2
-
-    username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
-    password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
 
     while True:
         logging.info('Starting Medium scraper')
@@ -59,7 +57,7 @@ async def update_top_posts(top_posts, topics, filename, sleep_time_in_s=0):
             browser = Browser(driver)
 
             await asyncio.sleep(sleep_time_in_s)
-            await browser.sign_in_to_medium_with_facebook(username, password, sleep_time_in_s)
+            await browser.sign_in_to_medium_with_facebook(fb_account, sleep_time_in_s)
 
             cookie_str = browser.build_cookie_str()
         finally:
@@ -141,6 +139,10 @@ def main():
         level=logging.DEBUG
     )
 
+    username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
+    password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
+    fb_account = facebook.Account(username, password)
+
     topics = medium.fetch_topics()
     if not env.is_production():
         topics = [topic for topic in topics
@@ -164,7 +166,7 @@ def main():
         tornado.autoreload.start()
 
     loop.create_task(update_top_posts(
-        top_posts, topics, TOP_POSTS_FILENAME, SLEEP_TIME_IN_S
+        fb_account, top_posts, topics, TOP_POSTS_FILENAME, SLEEP_TIME_IN_S
     ))
     logging.info('Starting web server and scraper')
     loop.run_forever()
