@@ -43,65 +43,73 @@ async def update_top_posts(fb_account, top_posts, topics, filename, sleep_time_i
     MAX_POSTS = 20
     NUM_PAGES = 5 if env.is_production() else 2
 
+    unvisited_topics = [topic for topic in topics if not top_posts[topic.name]]
+    if unvisited_topics:
+        await update_top_posts_helper(fb_account, top_posts, unvisited_topics, filename, MAX_POSTS, NUM_PAGES, sleep_time_in_s)
+
     while True:
-        logging.info('Starting Medium scraper')
-
-        await asyncio.sleep(sleep_time_in_s)
-
-        firefox_options = Options()
-        firefox_options.add_argument('--headless')
-        firefox_options.add_argument('--no-sandbox')
-        driver = webdriver.Firefox(firefox_options=firefox_options)
-
-        try:
-            browser = Browser(driver)
-
-            await asyncio.sleep(sleep_time_in_s)
-            await browser.sign_in_to_medium_with_facebook(fb_account, sleep_time_in_s)
-
-            cookie_str = browser.build_cookie_str()
-        finally:
-            logging.info('Closing browser')
-            browser.close()
-
-        for topic in topics:
-            logging.info(f'Fetching posts from {topic.name}')
-
-            base_url = f'https://medium.com/_/api/topics/{topic.id}/stream?limit=25'
-            to = ''
-            posts = []
-
-            for _ in range(NUM_PAGES):
-                sleep_time_str = '1 second' if sleep_time_in_s == 1 else f'{sleep_time_in_s} seconds'
-                logging.debug(f'Sleeping for {sleep_time_str}')
-                await asyncio.sleep(sleep_time_in_s)
-
-                url = base_url
-                if to:
-                    url = f'{url}&to={to}'
-
-                logging.debug(f'Sending GET request to {url}')
-
-                stream = await medium.fetch_stream(url, cookie_str)
-
-                if 'Post' not in stream['payload']['references']:
-                    break
-
-                posts += medium.extract_posts_from_stream(stream)
-                to = stream['payload']['paging']['next']['to']
-
-            logging.info(f'Finished fetching posts from {topic.name}')
-
-            top_posts[topic.name] = sorted(
-                posts, key=lambda post: post.total_clap_count, reverse=True)[:MAX_POSTS]
-
-            logging.info(f'Saving top posts to {filename}')
-            with open(filename, 'w') as f:
-                json.dump(top_posts, f)
-
         midnight_secs = secs_until_midnight(datetime.now())
         logging.info(f'Waking up Medium scraper in {midnight_secs} seconds')
         await asyncio.sleep(midnight_secs)
+        await update_top_posts_helper(fb_account, top_posts, topics, filename, MAX_POSTS, NUM_PAGES, sleep_time_in_s)
+
+
+async def update_top_posts_helper(fb_account, top_posts, topics, filename, max_posts, num_pages, sleep_time_in_s=0):
+    logging.info('Starting Medium scraper')
+
+    await asyncio.sleep(sleep_time_in_s)
+
+    firefox_options = Options()
+    firefox_options.add_argument('--headless')
+    firefox_options.add_argument('--no-sandbox')
+    driver = webdriver.Firefox(firefox_options=firefox_options)
+
+    try:
+        driver = webdriver.Firefox(firefox_options=firefox_options)
+        browser = Browser(driver)
+
+        await asyncio.sleep(sleep_time_in_s)
+        await browser.sign_in_to_medium_with_facebook(fb_account, sleep_time_in_s)
+
+        cookie_str = browser.build_cookie_str()
+    finally:
+        logging.info('Closing browser')
+        browser.close()
+
+    for topic in topics:
+        logging.info(f'Fetching posts from {topic.name}')
+
+        base_url = f'https://medium.com/_/api/topics/{topic.id}/stream?limit=25'
+        to = ''
+        posts = []
+
+        for _ in range(num_pages):
+            sleep_time_str = '1 second' if sleep_time_in_s == 1 else f'{sleep_time_in_s} seconds'
+            logging.debug(f'Sleeping for {sleep_time_str}')
+            await asyncio.sleep(sleep_time_in_s)
+
+            url = base_url
+            if to:
+                url = f'{url}&to={to}'
+
+            logging.debug(f'Sending GET request to {url}')
+
+            stream = await medium.fetch_stream(url, cookie_str)
+
+            if 'Post' not in stream['payload']['references']:
+                break
+
+            posts += medium.extract_posts_from_stream(stream)
+            to = stream['payload']['paging']['next']['to']
+
+        logging.info(f'Finished fetching posts from {topic.name}')
+
+        top_posts[topic.name] = sorted(
+            posts, key=lambda post: post.total_clap_count, reverse=True)[:max_posts]
+
+        logging.info(f'Saving top posts to {filename}')
+        with open(filename, 'w') as f:
+            json.dump(top_posts, f)
 
 
 class PostsHandler(tornado.web.RequestHandler):
