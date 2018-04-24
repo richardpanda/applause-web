@@ -38,4 +38,4 @@ if __name__ == '__main__':
     thread = threading.Thread(target=update_top_posts,
                               args=(top_posts, topics))
     thread.start()
-    app.run(port=8080)
+    app.run(host='0.0.0.0', port=8080)
