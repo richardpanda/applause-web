@@ -16,20 +16,20 @@ def update_top_posts(top_posts, topics):
     username = os.environ['APPLAUSE_WEB__FACEBOOK_USERNAME']
     password = os.environ['APPLAUSE_WEB__FACEBOOK_PASSWORD']
 
-    firefox_options = Options()
-    firefox_options.add_argument('--headless')
-    firefox_options.add_argument('--no-sandbox')
-    driver = webdriver.Firefox(firefox_options=firefox_options)
-
-    try:
-        driver = webdriver.Firefox(firefox_options=firefox_options)
-        browser = Browser(driver)
-        browser.sign_in_to_medium_with_facebook(username, password)
-        cookie_str = browser.build_cookie_str()
-    finally:
-        browser.close()
-
     while True:
+        firefox_options = Options()
+        firefox_options.add_argument('--headless')
+        firefox_options.add_argument('--no-sandbox')
+        driver = webdriver.Firefox(firefox_options=firefox_options)
+
+        try:
+            driver = webdriver.Firefox(firefox_options=firefox_options)
+            browser = Browser(driver)
+            browser.sign_in_to_medium_with_facebook(username, password)
+            cookie_str = browser.build_cookie_str()
+        finally:
+            browser.close()
+
         for topic in topics:
             logging.info(f'Fetching posts from {topic.name}')
 
