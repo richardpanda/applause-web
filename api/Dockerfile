@@ -24,4 +24,4 @@ ENV APPLAUSE_WEB__FACEBOOK_PASSWORD=""
 
 EXPOSE 8080
 
-CMD ["python", "main.py"]
+CMD ["python", "api.py"]

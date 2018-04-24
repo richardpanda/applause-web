@@ -4,7 +4,6 @@ import requests
 
 from bs4 import BeautifulSoup
 from collections import namedtuple
-from tornado.httpclient import AsyncHTTPClient
 
 BASE_URL = 'https://medium.com/'
 BASE_IMG_URL = 'https://cdn-images-1.medium.com/max/800/'
@@ -29,16 +28,10 @@ def extract_posts_from_stream(stream):
     return posts
 
 
-async def fetch_page(url, cookie_str):
-    http_client = AsyncHTTPClient()
-    response = await http_client.fetch(url, headers={'Cookie': cookie_str})
-    return response.body
-
-
-async def fetch_stream(url, cookies):
-    resp_str = await fetch_page(url, cookies)
+def fetch_stream(url, cookie_str):
+    resp = requests.get(url, headers={'Cookie': cookie_str})
     # Remove '])}while(1);</x>' from beginning of string
-    return json.loads(resp_str[16:])
+    return json.loads(resp.text[16:])
 
 
 def fetch_topics():

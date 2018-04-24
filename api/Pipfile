@@ -9,8 +9,9 @@ name = "pypi"
 
 selenium = "*"
 "beautifulsoup4" = "*"
-tornado = "*"
 requests = "*"
+Flask = "*"
+Flask-RESTful = "*"
 
 
 [dev-packages]
