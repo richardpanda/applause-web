@@ -1,0 +1,8 @@
+beautifulsoup4==4.6.3
+certifi==2018.8.13
+chardet==3.0.4
+idna==2.7
+redis==2.10.6
+requests==2.19.1
+selenium==3.14.0
+urllib3==1.23
