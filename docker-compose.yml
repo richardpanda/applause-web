@@ -1,11 +1,22 @@
-version: '3'
+version: "3"
 services:
   api:
     build: ./api
-    volumes:
-      - ./api:/usr/src/app
+    command: sh -c "./wait-for.sh redis:6379 -- python app.py"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
   app:
     build: "./app"
+  redis:
+    image: "redis:4.0-alpine"
+  scraper:
+    build: "./scraper"
+    depends_on:
+      - redis
+    environment:
+      - REDIS_HOST=redis
   web:
     build: ./nginx
     ports:

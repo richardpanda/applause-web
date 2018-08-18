@@ -8,7 +8,8 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 if __name__ == "__main__":
-    r = redis.StrictRedis(host="127.0.0.1", port=6379, db=0)
+    REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
+    r = redis.StrictRedis(host=REDIS_HOST, port=6379, db=0)
     topics = medium.fetch_topics()
     # topics = [
     #     topic for topic in topics if topic.name in "programming software-engineering"
