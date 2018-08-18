@@ -1,4 +1,5 @@
 import json
+import logging
 import medium
 import redis
 import os
@@ -8,8 +9,12 @@ from selenium import webdriver
 from selenium.webdriver.firefox.options import Options
 
 if __name__ == "__main__":
+    FORMAT = "%(asctime)s - %(levelname)s - %(message)s"
+    logging.basicConfig(level=logging.INFO, format=FORMAT)
+
     REDIS_HOST = os.getenv("REDIS_HOST", "127.0.0.1")
     r = redis.StrictRedis(host=REDIS_HOST, port=6379, db=0)
+    logging.info("Fetching topics")
     topics = medium.fetch_topics()
     # topics = [
     #     topic for topic in topics if topic.name in "programming software-engineering"
@@ -32,10 +37,10 @@ if __name__ == "__main__":
         browser.close()
 
     for topic in topics:
-        print(f"Scraping {topic.name}")
+        logging.info(f"Scraping {topic.name}")
         top_posts = medium.fetch_top_posts_from_topic_id(topic.id, cookie_str)
         key = f"posts:{topic.name}"
         r.delete(key)
         r.rpush(key, *[json.dumps(post._asdict()) for post in top_posts])
 
-    print("Done scraping!")
+    logging.info("Done scraping!")
